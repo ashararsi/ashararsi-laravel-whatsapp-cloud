@@ -37,6 +37,84 @@
                 </div>
             </div>
 
+            @if ($account->isMeta())
+                <div class="card shadow-sm mt-4">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <span>Business Profile</span>
+                        <form action="{{ route('whatsapp.admin.accounts.sync-business', $account) }}" method="POST" class="d-inline">
+                            @csrf
+                            <button type="submit" class="btn btn-sm btn-outline-success">Sync Business</button>
+                        </form>
+                    </div>
+                    <ul class="list-group list-group-flush">
+                        @if ($businessProfile)
+                            <li class="list-group-item d-flex justify-content-between">
+                                <span>Business Name</span>
+                                <span>{{ $businessProfile->business_name ?: '—' }}</span>
+                            </li>
+                            <li class="list-group-item d-flex justify-content-between">
+                                <span>Display Name</span>
+                                <span>{{ $businessProfile->display_name ?: '—' }}</span>
+                            </li>
+                            <li class="list-group-item d-flex justify-content-between">
+                                <span>Verification</span>
+                                <span>{{ $businessProfile->verification_status ?: '—' }}</span>
+                            </li>
+                            <li class="list-group-item d-flex justify-content-between">
+                                <span>Quality Rating</span>
+                                <span>{{ $businessProfile->quality_rating ?: '—' }}</span>
+                            </li>
+                            <li class="list-group-item d-flex justify-content-between">
+                                <span>Messaging Tier</span>
+                                <span>{{ $businessProfile->messaging_tier ?: '—' }}</span>
+                            </li>
+                            <li class="list-group-item d-flex justify-content-between">
+                                <span>Last Synced</span>
+                                <span>{{ $businessProfile->synced_at?->diffForHumans() ?? '—' }}</span>
+                            </li>
+                        @else
+                            <li class="list-group-item text-muted">No business profile synced yet.</li>
+                        @endif
+                    </ul>
+                </div>
+
+                <div class="card shadow-sm mt-4">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <span>Synced Phone Numbers</span>
+                        <form action="{{ route('whatsapp.admin.accounts.sync-numbers', $account) }}" method="POST" class="d-inline">
+                            @csrf
+                            <button type="submit" class="btn btn-sm btn-outline-success">Sync Numbers</button>
+                        </form>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="table table-sm mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Display</th>
+                                    <th>Verified Name</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @forelse ($syncedNumbers as $number)
+                                    <tr>
+                                        <td><code>{{ $number->phone_number_id }}</code></td>
+                                        <td>{{ $number->display_phone_number }}</td>
+                                        <td>{{ $number->verified_name }}</td>
+                                        <td>{{ $number->status }}</td>
+                                    </tr>
+                                @empty
+                                    <tr>
+                                        <td colspan="4" class="text-muted text-center py-3">No phone numbers synced yet.</td>
+                                    </tr>
+                                @endforelse
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            @endif
+
             <div class="card shadow-sm mt-4">
                 <div class="card-header">Account Details</div>
                 <ul class="list-group list-group-flush">

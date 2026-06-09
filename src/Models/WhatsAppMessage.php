@@ -34,6 +34,9 @@ class WhatsAppMessage extends Model
         'type',
         'message',
         'status',
+        'retry_count',
+        'last_error',
+        'dead_lettered_at',
         'meta_json',
         'response_json',
     ];
@@ -43,6 +46,7 @@ class WhatsAppMessage extends Model
         return [
             'meta_json' => 'array',
             'response_json' => 'array',
+            'dead_lettered_at' => 'datetime',
         ];
     }
 

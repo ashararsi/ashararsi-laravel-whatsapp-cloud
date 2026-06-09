@@ -46,6 +46,7 @@ WhatsApp::queue()->send('923001234567', 'Queued message');
 ```php
 WhatsApp::sendText($to, $message, $previewUrl = false);
 WhatsApp::sendTemplate($to, 'hello_world', 'en_US', $components);
+WhatsApp::template($to, 'order_confirmed', ['Ali', '#12345']);
 WhatsApp::sendImage($to, 'https://example.com/image.jpg', $caption);
 WhatsApp::sendDocument($to, 'https://example.com/doc.pdf', $filename, $caption);
 WhatsApp::sendAudio($to, 'https://example.com/audio.mp3');
@@ -183,6 +184,7 @@ Disable with `WHATSAPP_CONVERSATIONS_ENABLED=false`.
 | `/admin/whatsapp/conversations` | Conversation list + search |
 | `/admin/whatsapp/conversations/{id}` | Message timeline + reply form |
 | `/admin/whatsapp/campaigns` | Broadcast campaigns |
+| `/admin/whatsapp/templates` | Message templates (sync, search, filter) |
 | `/admin/whatsapp/accounts` | Account management |
 
 ### CRM: Notes & Tags
@@ -194,6 +196,84 @@ On the contact detail page you can:
 - Remove tags from a contact
 
 Tags are scoped per WhatsApp account.
+
+### Template Manager
+
+Manage Meta WhatsApp message templates from the admin panel or CLI.
+
+| URL / Command | Purpose |
+|---------------|---------|
+| `/admin/whatsapp/templates` | List, search, and filter templates |
+| `/admin/whatsapp/templates/{id}` | View template details and components |
+| `php artisan whatsapp:templates:sync` | Sync templates from Meta |
+
+**Categories:** `UTILITY`, `AUTHENTICATION`, `MARKETING`
+
+**Statuses:** `APPROVED`, `PENDING`, `REJECTED`
+
+#### Sync templates
+
+```bash
+# All active Meta accounts
+php artisan whatsapp:templates:sync
+
+# Specific account (ID or name)
+php artisan whatsapp:templates:sync --account=primary
+
+# Filter by provider
+php artisan whatsapp:templates:sync --provider=meta
+```
+
+Requires a Meta account with `waba_id` (or `phone_number_id` as fallback) and a valid access token with `whatsapp_business_management` permission.
+
+#### Send a template (simple variables)
+
+Maps body placeholders `{{1}}`, `{{2}}`, … to an ordered variable list:
+
+```php
+use Vendor\LaravelWhatsAppCloud\Facades\WhatsApp;
+
+// Sends order_confirmed template with body variables
+WhatsApp::template('923001234567', 'order_confirmed', [
+    'Ali',      // {{1}}
+    '#12345',   // {{2}}
+]);
+
+// Specific account + language override
+WhatsApp::using('marketing')->template('923001234567', 'order_confirmed', ['Ali', '#12345'], 'en_US');
+```
+
+#### Send a template (full Meta components)
+
+For header/button parameters, use the low-level API:
+
+```php
+WhatsApp::sendTemplate('923001234567', 'order_confirmed', 'en_US', [
+    [
+        'type' => 'body',
+        'parameters' => [
+            ['type' => 'text', 'text' => 'Ali'],
+            ['type' => 'text', 'text' => '#12345'],
+        ],
+    ],
+]);
+```
+
+#### Database table: `whatsapp_templates`
+
+| Column | Description |
+|--------|-------------|
+| `account_id` | Owning WhatsApp account |
+| `provider` | `meta` or `twilio` |
+| `template_name` | Meta template name |
+| `category` | `UTILITY`, `AUTHENTICATION`, `MARKETING` |
+| `language` | BCP-47 code (e.g. `en_US`) |
+| `status` | `APPROVED`, `PENDING`, `REJECTED` |
+| `components_json` | Raw Meta components array |
+| `meta_template_id` | Meta Graph API template ID |
+| `synced_at` | Last sync timestamp |
+
+The dashboard shows approved, pending, and rejected template counts.
 
 ### Broadcast Campaigns
 

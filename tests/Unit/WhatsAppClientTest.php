@@ -19,7 +19,7 @@ class WhatsAppClientTest extends TestCase
             ], 200),
         ]);
 
-        $client = new WhatsAppClient;
+        $client = app(WhatsAppClient::class);
         $response = $client->send('phone-id', 'token', [
             'messaging_product' => 'whatsapp',
             'to' => '923001234567',
@@ -41,7 +41,7 @@ class WhatsAppClientTest extends TestCase
 
         $this->expectException(WhatsAppException::class);
 
-        (new WhatsAppClient)->send('phone-id', 'bad-token', [
+        app(WhatsAppClient::class)->send('phone-id', 'bad-token', [
             'messaging_product' => 'whatsapp',
             'to' => '923001234567',
             'type' => 'text',

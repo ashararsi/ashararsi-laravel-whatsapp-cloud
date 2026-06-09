@@ -31,6 +31,17 @@ interface WhatsAppProviderInterface
 
     public function sendAudio(string $to, string $link): ProviderResult;
 
+    public function sendImageFile(string $to, string $filePath, ?string $caption = null): ProviderResult;
+
+    public function sendDocumentFile(
+        string $to,
+        string $filePath,
+        ?string $filename = null,
+        ?string $caption = null,
+    ): ProviderResult;
+
+    public function sendFile(string $to, string $filePath, ?string $caption = null): ProviderResult;
+
     public function sendLocation(
         string $to,
         float $latitude,

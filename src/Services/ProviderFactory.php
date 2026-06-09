@@ -13,6 +13,7 @@ class ProviderFactory
 {
     public function __construct(
         protected WhatsAppClientInterface $metaClient,
+        protected MediaUploadService $mediaUpload,
     ) {}
 
     public static function make(WhatsAppAccount $account): WhatsAppProviderInterface
@@ -23,7 +24,7 @@ class ProviderFactory
     public function resolve(WhatsAppAccount $account): WhatsAppProviderInterface
     {
         return match ($account->provider ?? WhatsAppAccount::PROVIDER_META) {
-            WhatsAppAccount::PROVIDER_META => new MetaProvider($account, $this->metaClient),
+            WhatsAppAccount::PROVIDER_META => new MetaProvider($account, $this->metaClient, $this->mediaUpload),
             WhatsAppAccount::PROVIDER_TWILIO => new TwilioProvider($account),
             default => throw new WhatsAppException("Unsupported WhatsApp provider [{$account->provider}]."),
         };

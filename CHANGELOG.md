@@ -2,6 +2,14 @@
 
 All notable changes to `ashararsi/laravel-whatsapp-cloud` will be documented in this file.
 
+## [Unreleased]
+
+### Added
+- Template Manager: admin UI (`/admin/whatsapp/templates`), sync command, search/filter by category
+- `WhatsApp::template()` fluent API for simple body variable substitution
+- Dashboard template stats (approved, pending, rejected)
+- Migration upgrading `whatsapp_templates` with `provider`, `template_name`, `meta_template_id`
+
 ## [2.0.0-beta.1] - 2026-06-09
 
 ### Added

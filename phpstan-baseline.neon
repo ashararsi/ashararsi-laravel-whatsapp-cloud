@@ -1,52 +1,16 @@
 parameters:
 	ignoreErrors:
 		-
-			message: '#^Access to an undefined property Vendor\\LaravelWhatsAppCloud\\Models\\WhatsAppAccount\:\:\$access_token\.$#'
-			identifier: property.notFound
-			count: 1
-			path: src/Commands/DoctorCommand.php
-
-		-
-			message: '#^Access to an undefined property Vendor\\LaravelWhatsAppCloud\\Models\\WhatsAppAccount\:\:\$name\.$#'
-			identifier: property.notFound
-			count: 4
-			path: src/Commands/DoctorCommand.php
-
-		-
-			message: '#^Access to an undefined property Vendor\\LaravelWhatsAppCloud\\Models\\WhatsAppAccount\:\:\$phone_number_id\.$#'
-			identifier: property.notFound
-			count: 1
-			path: src/Commands/DoctorCommand.php
-
-		-
-			message: '#^Access to an undefined property Vendor\\LaravelWhatsAppCloud\\Models\\WhatsAppAccount\:\:\$twilio_sid\.$#'
-			identifier: property.notFound
-			count: 1
-			path: src/Commands/DoctorCommand.php
-
-		-
-			message: '#^Access to an undefined property Vendor\\LaravelWhatsAppCloud\\Models\\WhatsAppAccount\:\:\$twilio_token\.$#'
-			identifier: property.notFound
-			count: 1
-			path: src/Commands/DoctorCommand.php
-
-		-
-			message: '#^Access to an undefined property Vendor\\LaravelWhatsAppCloud\\Models\\WhatsAppAccount\:\:\$twilio_whatsapp_number\.$#'
-			identifier: property.notFound
-			count: 1
-			path: src/Commands/DoctorCommand.php
-
-		-
 			message: '#^Access to an undefined property Vendor\\LaravelWhatsAppCloud\\Models\\WhatsAppCampaign\:\:\$name\.$#'
 			identifier: property.notFound
 			count: 1
 			path: src/Commands/RunCampaignsCommand.php
 
 		-
-			message: '#^Access to an undefined property Vendor\\LaravelWhatsAppCloud\\Models\\WhatsAppAccount\:\:\$name\.$#'
+			message: '#^Access to an undefined property Vendor\\LaravelWhatsAppCloud\\Models\\WhatsAppBusinessProfile\:\:\$business_name\.$#'
 			identifier: property.notFound
 			count: 1
-			path: src/Commands/SyncTemplatesCommand.php
+			path: src/Commands/SyncBusinessCommand.php
 
 		-
 			message: '#^Unsafe usage of new static\(\)\.$#'
@@ -55,7 +19,7 @@ parameters:
 			path: src/Filament/WhatsAppFilamentPlugin.php
 
 		-
-			message: '#^Access to an undefined property Vendor\\LaravelWhatsAppCloud\\Models\\WhatsAppAccount\:\:\$is_active\.$#'
+			message: '#^Access to an undefined property Vendor\\LaravelWhatsAppCloud\\Models\\WhatsAppBusinessProfile\:\:\$business_name\.$#'
 			identifier: property.notFound
 			count: 1
 			path: src/Http/Controllers/Admin/AccountController.php
@@ -121,10 +85,16 @@ parameters:
 			path: src/Http/Controllers/Admin/DashboardController.php
 
 		-
-			message: '#^Access to an undefined property Vendor\\LaravelWhatsAppCloud\\Models\\WhatsAppAccount\:\:\$name\.$#'
-			identifier: property.notFound
+			message: '#^Parameter \#1 \$view of function view expects view\-string\|null, string given\.$#'
+			identifier: argument.type
 			count: 1
-			path: src/Listeners/LogIncomingMessage.php
+			path: src/Http/Controllers/Admin/SystemController.php
+
+		-
+			message: '#^Parameter \#1 \$view of function view expects view\-string\|null, string given\.$#'
+			identifier: argument.type
+			count: 2
+			path: src/Http/Controllers/Admin/TemplateController.php
 
 		-
 			message: '#^Call to function is_string\(\) with string will always evaluate to true\.$#'
@@ -139,70 +109,10 @@ parameters:
 			path: src/Listeners/ProcessIncomingMessage.php
 
 		-
-			message: '#^Access to an undefined property Vendor\\LaravelWhatsAppCloud\\Models\\WhatsAppAccount\:\:\$provider\.$#'
-			identifier: property.notFound
-			count: 1
-			path: src/Models/WhatsAppAccount.php
-
-		-
 			message: '#^Access to an undefined property Vendor\\LaravelWhatsAppCloud\\Models\\WhatsAppConversationMessage\:\:\$direction\.$#'
 			identifier: property.notFound
 			count: 2
 			path: src/Models/WhatsAppConversationMessage.php
-
-		-
-			message: '#^Access to an undefined property Vendor\\LaravelWhatsAppCloud\\Models\\WhatsAppAccount\:\:\$is_default\.$#'
-			identifier: property.notFound
-			count: 1
-			path: src/Observers/WhatsAppAccountObserver.php
-
-		-
-			message: '#^Access to an undefined property Vendor\\LaravelWhatsAppCloud\\Models\\WhatsAppAccount\:\:\$name\.$#'
-			identifier: property.notFound
-			count: 1
-			path: src/Observers/WhatsAppAccountObserver.php
-
-		-
-			message: '#^Access to an undefined property Vendor\\LaravelWhatsAppCloud\\Models\\WhatsAppAccount\:\:\$phone_number_id\.$#'
-			identifier: property.notFound
-			count: 1
-			path: src/Observers/WhatsAppAccountObserver.php
-
-		-
-			message: '#^Access to an undefined property Vendor\\LaravelWhatsAppCloud\\Models\\WhatsAppAccount\:\:\$access_token\.$#'
-			identifier: property.notFound
-			count: 2
-			path: src/Providers/MetaProvider.php
-
-		-
-			message: '#^Access to an undefined property Vendor\\LaravelWhatsAppCloud\\Models\\WhatsAppAccount\:\:\$phone_number_id\.$#'
-			identifier: property.notFound
-			count: 2
-			path: src/Providers/MetaProvider.php
-
-		-
-			message: '#^Access to an undefined property Vendor\\LaravelWhatsAppCloud\\Models\\WhatsAppAccount\:\:\$phone_number\.$#'
-			identifier: property.notFound
-			count: 1
-			path: src/Providers/TwilioProvider.php
-
-		-
-			message: '#^Access to an undefined property Vendor\\LaravelWhatsAppCloud\\Models\\WhatsAppAccount\:\:\$twilio_sid\.$#'
-			identifier: property.notFound
-			count: 3
-			path: src/Providers/TwilioProvider.php
-
-		-
-			message: '#^Access to an undefined property Vendor\\LaravelWhatsAppCloud\\Models\\WhatsAppAccount\:\:\$twilio_token\.$#'
-			identifier: property.notFound
-			count: 2
-			path: src/Providers/TwilioProvider.php
-
-		-
-			message: '#^Access to an undefined property Vendor\\LaravelWhatsAppCloud\\Models\\WhatsAppAccount\:\:\$twilio_whatsapp_number\.$#'
-			identifier: property.notFound
-			count: 1
-			path: src/Providers/TwilioProvider.php
 
 		-
 			message: '#^PHPDoc tag @param references unknown parameter\: \$payload$#'
@@ -211,7 +121,7 @@ parameters:
 			path: src/Providers/TwilioProvider.php
 
 		-
-			message: '#^Method Vendor\\LaravelWhatsAppCloud\\Services\\AnalyticsService\:\:overview\(\) should return array\<string, array\<string, int\>\|int\> but returns array\<string, array\<int, array\<string, int\|string\>\>\|int\>\.$#'
+			message: '#^Method Vendor\\LaravelWhatsAppCloud\\Services\\AnalyticsService\:\:overview\(\) should return array\<string, array\<string, array\<int, mixed\>\|float\|int\>\|float\|int\> but returns array\<string, array\<int\|string, mixed\>\|float\|int\>\.$#'
 			identifier: return.type
 			count: 1
 			path: src/Services/AnalyticsService.php
@@ -283,18 +193,6 @@ parameters:
 			path: src/Services/ConversationService.php
 
 		-
-			message: '#^Access to an undefined property Vendor\\LaravelWhatsAppCloud\\Models\\WhatsAppAccount\:\:\$access_token\.$#'
-			identifier: property.notFound
-			count: 2
-			path: src/Services/MediaDownloadService.php
-
-		-
-			message: '#^Access to an undefined property Vendor\\LaravelWhatsAppCloud\\Models\\WhatsAppAccount\:\:\$phone_number\.$#'
-			identifier: property.notFound
-			count: 1
-			path: src/Services/MessageLogger.php
-
-		-
 			message: '#^Access to an undefined property Vendor\\LaravelWhatsAppCloud\\Models\\WhatsAppScheduledMessage\:\:\$account_id\.$#'
 			identifier: property.notFound
 			count: 1
@@ -313,24 +211,6 @@ parameters:
 			path: src/Services/ScheduledMessageService.php
 
 		-
-			message: '#^Access to an undefined property Vendor\\LaravelWhatsAppCloud\\Models\\WhatsAppAccount\:\:\$access_token\.$#'
-			identifier: property.notFound
-			count: 1
-			path: src/Services/TemplateSyncService.php
-
-		-
-			message: '#^Access to an undefined property Vendor\\LaravelWhatsAppCloud\\Models\\WhatsAppAccount\:\:\$phone_number_id\.$#'
-			identifier: property.notFound
-			count: 1
-			path: src/Services/TemplateSyncService.php
-
-		-
-			message: '#^Access to an undefined property Vendor\\LaravelWhatsAppCloud\\Models\\WhatsAppAccount\:\:\$twilio_token\.$#'
-			identifier: property.notFound
-			count: 2
-			path: src/Services/TwilioWebhookHandler.php
-
-		-
 			message: '#^Access to an undefined property Vendor\\LaravelWhatsAppCloud\\Models\\WhatsAppMessage\:\:\$status\.$#'
 			identifier: property.notFound
 			count: 1
@@ -343,18 +223,6 @@ parameters:
 			path: src/Services/WebhookHandler.php
 
 		-
-			message: '#^Access to an undefined property Vendor\\LaravelWhatsAppCloud\\Models\\WhatsAppAccount\:\:\$app_secret\.$#'
-			identifier: property.notFound
-			count: 1
-			path: src/Services/WebhookSignatureValidator.php
-
-		-
-			message: '#^Access to an undefined property Vendor\\LaravelWhatsAppCloud\\Models\\WhatsAppAccount\:\:\$provider\.$#'
-			identifier: property.notFound
-			count: 3
-			path: src/Services/WhatsAppManager.php
-
-		-
 			message: '#^PHPDoc tag @param references unknown parameter\: \$payload$#'
 			identifier: parameter.notFound
 			count: 1
@@ -363,6 +231,12 @@ parameters:
 		-
 			message: '#^PHPDoc tag @param references unknown parameter\: \$sender$#'
 			identifier: parameter.notFound
+			count: 1
+			path: src/Services/WhatsAppManager.php
+
+		-
+			message: '#^Parameter \#4 \$components of method Vendor\\LaravelWhatsAppCloud\\Contracts\\WhatsAppProviderInterface\:\:sendTemplate\(\) expects array\<string, mixed\>, array\<int, array\<string, mixed\>\> given\.$#'
+			identifier: argument.type
 			count: 1
 			path: src/Services/WhatsAppManager.php
 

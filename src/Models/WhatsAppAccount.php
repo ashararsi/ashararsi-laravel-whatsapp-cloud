@@ -7,6 +7,22 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Vendor\LaravelWhatsAppCloud\Observers\WhatsAppAccountObserver;
 
+/**
+ * @property int $id
+ * @property string $name
+ * @property string|null $provider
+ * @property string $phone_number
+ * @property string|null $phone_number_id
+ * @property string|null $waba_id
+ * @property string|null $access_token
+ * @property string|null $app_secret
+ * @property string|null $webhook_verify_token
+ * @property string|null $twilio_sid
+ * @property string|null $twilio_token
+ * @property string|null $twilio_whatsapp_number
+ * @property bool $is_default
+ * @property bool $is_active
+ */
 #[ObservedBy([WhatsAppAccountObserver::class])]
 class WhatsAppAccount extends Model
 {

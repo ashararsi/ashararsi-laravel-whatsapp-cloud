@@ -99,9 +99,17 @@
                    href="{{ route('whatsapp.admin.campaigns.index') }}">
                     <i class="bi bi-megaphone"></i> Campaigns
                 </a>
+                <a class="nav-link {{ request()->routeIs('whatsapp.admin.templates.*') ? 'active' : '' }}"
+                   href="{{ route('whatsapp.admin.templates.index') }}">
+                    <i class="bi bi-file-earmark-text"></i> Templates
+                </a>
                 <a class="nav-link {{ request()->routeIs('whatsapp.admin.accounts.*') ? 'active' : '' }}"
                    href="{{ route('whatsapp.admin.accounts.index') }}">
                     <i class="bi bi-gear"></i> Accounts
+                </a>
+                <a class="nav-link {{ request()->routeIs('whatsapp.admin.system') ? 'active' : '' }}"
+                   href="{{ route('whatsapp.admin.system') }}">
+                    <i class="bi bi-activity"></i> System
                 </a>
             </nav>
         </aside>
@@ -165,9 +173,17 @@
                    href="{{ route('whatsapp.admin.campaigns.index') }}">
                     <i class="bi bi-megaphone me-2"></i> Campaigns
                 </a>
+                <a class="nav-link text-white {{ request()->routeIs('whatsapp.admin.templates.*') ? 'active' : '' }}"
+                   href="{{ route('whatsapp.admin.templates.index') }}">
+                    <i class="bi bi-file-earmark-text me-2"></i> Templates
+                </a>
                 <a class="nav-link text-white {{ request()->routeIs('whatsapp.admin.accounts.*') ? 'active' : '' }}"
                    href="{{ route('whatsapp.admin.accounts.index') }}">
                     <i class="bi bi-gear me-2"></i> Accounts
+                </a>
+                <a class="nav-link text-white {{ request()->routeIs('whatsapp.admin.system') ? 'active' : '' }}"
+                   href="{{ route('whatsapp.admin.system') }}">
+                    <i class="bi bi-activity me-2"></i> System
                 </a>
             </nav>
         </div>

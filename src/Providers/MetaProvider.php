@@ -7,6 +7,7 @@ use Vendor\LaravelWhatsAppCloud\Contracts\WhatsAppClientInterface;
 use Vendor\LaravelWhatsAppCloud\Contracts\WhatsAppProviderInterface;
 use Vendor\LaravelWhatsAppCloud\Exceptions\WhatsAppException;
 use Vendor\LaravelWhatsAppCloud\Models\WhatsAppAccount;
+use Vendor\LaravelWhatsAppCloud\Services\MediaUploadService;
 use Vendor\LaravelWhatsAppCloud\Services\WhatsAppMessageBuilder;
 use Vendor\LaravelWhatsAppCloud\Support\ProviderResult;
 
@@ -15,6 +16,7 @@ class MetaProvider implements SupportsInteractiveMessages, WhatsAppProviderInter
     public function __construct(
         protected WhatsAppAccount $account,
         protected WhatsAppClientInterface $client,
+        protected MediaUploadService $mediaUpload,
     ) {}
 
     public function sendText(string $to, string $text, bool $previewUrl = false): ProviderResult
@@ -77,6 +79,45 @@ class MetaProvider implements SupportsInteractiveMessages, WhatsAppProviderInter
             'audio',
             WhatsAppMessageBuilder::audio($to, $link),
         );
+    }
+
+    public function sendImageFile(string $to, string $filePath, ?string $caption = null): ProviderResult
+    {
+        $mediaId = $this->mediaUpload->upload($this->account, $filePath);
+
+        return $this->sendPayload(
+            $to,
+            'image',
+            WhatsAppMessageBuilder::imageFromId($to, $mediaId, $caption),
+        );
+    }
+
+    public function sendDocumentFile(
+        string $to,
+        string $filePath,
+        ?string $filename = null,
+        ?string $caption = null,
+    ): ProviderResult {
+        $mediaId = $this->mediaUpload->upload($this->account, $filePath);
+        $filename ??= basename($filePath);
+
+        return $this->sendPayload(
+            $to,
+            'document',
+            WhatsAppMessageBuilder::documentFromId($to, $mediaId, $filename, $caption),
+        );
+    }
+
+    public function sendFile(string $to, string $filePath, ?string $caption = null): ProviderResult
+    {
+        $mime = is_file($filePath) ? (mime_content_type($filePath) ?: '') : '';
+        $extension = strtolower(pathinfo($filePath, PATHINFO_EXTENSION));
+        $isImage = str_starts_with($mime, 'image/')
+            || in_array($extension, ['jpg', 'jpeg', 'png', 'gif', 'webp'], true);
+
+        return $isImage
+            ? $this->sendImageFile($to, $filePath, $caption)
+            : $this->sendDocumentFile($to, $filePath, basename($filePath), $caption);
     }
 
     public function sendLocation(
@@ -145,6 +186,17 @@ class MetaProvider implements SupportsInteractiveMessages, WhatsAppProviderInter
             ),
             'video' => WhatsAppMessageBuilder::video($to, (string) ($options['link'] ?? ''), $options['caption'] ?? null),
             'audio' => WhatsAppMessageBuilder::audio($to, (string) ($options['link'] ?? '')),
+            'image_file' => WhatsAppMessageBuilder::imageFromId(
+                $to,
+                (string) ($options['media_id'] ?? ''),
+                $options['caption'] ?? null,
+            ),
+            'document_file' => WhatsAppMessageBuilder::documentFromId(
+                $to,
+                (string) ($options['media_id'] ?? ''),
+                $options['filename'] ?? null,
+                $options['caption'] ?? null,
+            ),
             'location' => WhatsAppMessageBuilder::location(
                 $to,
                 (float) ($options['latitude'] ?? 0),

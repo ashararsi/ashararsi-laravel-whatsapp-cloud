@@ -6,6 +6,7 @@ use PHPUnit\Framework\Attributes\Test;
 use Vendor\LaravelWhatsAppCloud\Contracts\WhatsAppClientInterface;
 use Vendor\LaravelWhatsAppCloud\Models\WhatsAppAccount;
 use Vendor\LaravelWhatsAppCloud\Providers\MetaProvider;
+use Vendor\LaravelWhatsAppCloud\Services\MediaUploadService;
 use Vendor\LaravelWhatsAppCloud\Tests\Mocks\MockWhatsAppClient;
 use Vendor\LaravelWhatsAppCloud\Tests\TestCase;
 
@@ -27,7 +28,7 @@ class MetaProviderTest extends TestCase
             'is_active' => true,
         ]);
 
-        $provider = new MetaProvider($account, $mock);
+        $provider = new MetaProvider($account, $mock, app(MediaUploadService::class));
         $result = $provider->sendText('923009999999', 'Hello Meta');
 
         $this->assertSame('text', $result->payload['type']);
@@ -49,7 +50,7 @@ class MetaProviderTest extends TestCase
             'is_active' => true,
         ]);
 
-        $provider = new MetaProvider($account, $mock);
+        $provider = new MetaProvider($account, $mock, app(MediaUploadService::class));
         $payload = $provider->buildPayload('text', '923009999999', ['text' => 'Queued']);
 
         $this->assertSame('text', $payload['type']);

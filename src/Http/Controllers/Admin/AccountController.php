@@ -11,7 +11,11 @@ use Vendor\LaravelWhatsAppCloud\Http\Requests\StoreAccountRequest;
 use Vendor\LaravelWhatsAppCloud\Http\Requests\TestMessageRequest;
 use Vendor\LaravelWhatsAppCloud\Http\Requests\UpdateAccountRequest;
 use Vendor\LaravelWhatsAppCloud\Models\WhatsAppAccount;
+use Vendor\LaravelWhatsAppCloud\Models\WhatsAppBusinessProfile;
 use Vendor\LaravelWhatsAppCloud\Models\WhatsAppMessage;
+use Vendor\LaravelWhatsAppCloud\Models\WhatsAppSyncedPhoneNumber;
+use Vendor\LaravelWhatsAppCloud\Services\BusinessProfileSyncService;
+use Vendor\LaravelWhatsAppCloud\Services\PhoneNumberSyncService;
 
 class AccountController extends Controller
 {
@@ -53,7 +57,21 @@ class AccountController extends Controller
             ->latest('id')
             ->paginate(20);
 
-        return view('whatsapp::admin.accounts.show', compact('account', 'messages'));
+        $businessProfile = WhatsAppBusinessProfile::query()
+            ->where('account_id', $account->id)
+            ->first();
+
+        $syncedNumbers = WhatsAppSyncedPhoneNumber::query()
+            ->where('account_id', $account->id)
+            ->orderBy('display_phone_number')
+            ->get();
+
+        return view('whatsapp::admin.accounts.show', compact(
+            'account',
+            'messages',
+            'businessProfile',
+            'syncedNumbers',
+        ));
     }
 
     public function edit(WhatsAppAccount $account): View
@@ -119,6 +137,36 @@ class AccountController extends Controller
             ]);
 
             return back()->with('error', 'Failed to send test message. Check application logs for details.');
+        }
+    }
+
+    public function syncBusiness(
+        WhatsAppAccount $account,
+        BusinessProfileSyncService $service,
+    ): RedirectResponse {
+        try {
+            $profile = $service->syncAccount($account);
+
+            return back()->with('success', "Business profile synced: {$profile->business_name}");
+        } catch (\Throwable $e) {
+            report($e);
+
+            return back()->with('error', 'Business profile sync failed. Verify WABA ID and access token.');
+        }
+    }
+
+    public function syncNumbers(
+        WhatsAppAccount $account,
+        PhoneNumberSyncService $service,
+    ): RedirectResponse {
+        try {
+            $count = $service->syncAccount($account);
+
+            return back()->with('success', "Synced {$count} phone number(s) from Meta.");
+        } catch (\Throwable $e) {
+            report($e);
+
+            return back()->with('error', 'Phone number sync failed. Verify WABA ID and access token.');
         }
     }
 }

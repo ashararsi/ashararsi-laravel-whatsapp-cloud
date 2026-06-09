@@ -12,6 +12,7 @@ use Vendor\LaravelWhatsAppCloud\Exceptions\WhatsAppException;
 use Vendor\LaravelWhatsAppCloud\Jobs\SendWhatsAppMessageJob;
 use Vendor\LaravelWhatsAppCloud\Models\WhatsAppAccount;
 use Vendor\LaravelWhatsAppCloud\Models\WhatsAppMessage;
+use Vendor\LaravelWhatsAppCloud\Models\WhatsAppTemplate;
 use Vendor\LaravelWhatsAppCloud\Support\ProviderResult;
 use Vendor\LaravelWhatsAppCloud\Support\WhatsAppPayload;
 
@@ -26,6 +27,7 @@ class WhatsAppManager
         protected AccountResolverInterface $accountResolver,
         protected MessageLoggerInterface $messageLogger,
         protected ConversationRecorderInterface $conversationRecorder,
+        protected MediaUploadService $mediaUpload,
     ) {}
 
     public function account(int|string $identifier): self
@@ -66,7 +68,7 @@ class WhatsAppManager
     }
 
     /**
-     * @param  array<string, mixed>  $components
+     * @param  array<int, array<string, mixed>>  $components
      */
     public function sendTemplate(
         string $to,
@@ -81,6 +83,42 @@ class WhatsAppManager
             ['name' => $name, 'language' => $language, 'components' => $components],
             fn ($provider) => $provider->sendTemplate($to, $name, $language, $components),
         );
+    }
+
+    /**
+     * Send a template using simple body variables.
+     *
+     * WhatsApp::template('923001234567', 'order_confirmed', ['Ali', '#12345']);
+     *
+     * @param  array<int, string|int|float>  $variables
+     */
+    public function template(
+        string $to,
+        string $templateName,
+        array $variables = [],
+        ?string $language = null,
+    ): WhatsAppMessage {
+        $account = $this->accountResolver->resolve($this->accountIdentifier);
+        $stored = $this->resolveStoredTemplate($account, $templateName, $language);
+
+        $resolvedLanguage = $language ?? ($stored !== null ? $stored->language : null) ?? 'en_US';
+
+        $components = WhatsAppMessageBuilder::templateComponentsFromVariables($variables);
+
+        return $this->sendTemplate($to, $templateName, $resolvedLanguage, $components);
+    }
+
+    protected function resolveStoredTemplate(
+        WhatsAppAccount $account,
+        string $templateName,
+        ?string $language = null,
+    ): ?WhatsAppTemplate {
+        return WhatsAppTemplate::query()
+            ->where('account_id', $account->id)
+            ->where('template_name', $templateName)
+            ->when($language, fn ($q) => $q->where('language', $language))
+            ->orderByDesc('synced_at')
+            ->first();
     }
 
     public function sendImage(string $to, string $link, ?string $caption = null): WhatsAppMessage
@@ -129,6 +167,110 @@ class WhatsAppManager
             ['link' => $link, 'caption' => $caption],
             fn ($provider) => $provider->sendVideo($to, $link, $caption),
         );
+    }
+
+    public function sendImageFile(string $to, string $filePath, ?string $caption = null): WhatsAppMessage
+    {
+        return $this->dispatchFile(
+            'image_file',
+            $to,
+            $caption ?? basename($filePath),
+            $filePath,
+            'image',
+            fn ($provider) => $provider->sendImageFile($to, $filePath, $caption),
+        );
+    }
+
+    public function sendDocumentFile(
+        string $to,
+        string $filePath,
+        ?string $filename = null,
+        ?string $caption = null,
+    ): WhatsAppMessage {
+        $filename ??= basename($filePath);
+
+        return $this->dispatchFile(
+            'document_file',
+            $to,
+            $filename,
+            $filePath,
+            'document',
+            fn ($provider) => $provider->sendDocumentFile($to, $filePath, $filename, $caption),
+        );
+    }
+
+    public function sendFile(string $to, string $filePath, ?string $caption = null): WhatsAppMessage
+    {
+        $mime = is_file($filePath) ? (mime_content_type($filePath) ?: '') : '';
+        $extension = strtolower(pathinfo($filePath, PATHINFO_EXTENSION));
+        $isImage = str_starts_with($mime, 'image/')
+            || in_array($extension, ['jpg', 'jpeg', 'png', 'gif', 'webp'], true);
+
+        return $isImage
+            ? $this->sendImageFile($to, $filePath, $caption)
+            : $this->sendDocumentFile($to, $filePath, basename($filePath), $caption);
+    }
+
+    /**
+     * @param  callable(WhatsAppProviderInterface): ProviderResult  $sender
+     */
+    protected function dispatchFile(
+        string $queuedType,
+        string $to,
+        ?string $message,
+        string $filePath,
+        string $mediaKind,
+        callable $sender,
+    ): WhatsAppMessage {
+        $account = $this->accountResolver->resolve($this->accountIdentifier);
+
+        if ($this->shouldQueue()) {
+            $mediaId = $this->mediaUpload->upload($account, $filePath);
+            $provider = $this->providerFactory->resolve($account);
+
+            $options = match ($mediaKind) {
+                'image' => ['media_id' => $mediaId, 'caption' => $message !== basename($filePath) ? $message : null],
+                default => [
+                    'media_id' => $mediaId,
+                    'filename' => $message,
+                    'caption' => null,
+                ],
+            };
+
+            $payload = $provider->buildPayload($queuedType, $to, $options);
+
+            $log = $this->messageLogger->log(
+                $account,
+                $to,
+                $mediaKind,
+                $message,
+                $payload,
+                null,
+                WhatsAppMessage::STATUS_PENDING,
+            );
+
+            $job = new SendWhatsAppMessageJob(
+                accountId: $account->id,
+                payload: $payload,
+                type: $queuedType,
+                to: $to,
+                message: $message,
+                messageId: $log->id ?? null,
+            );
+
+            $connection = config('whatsapp.queue_connection');
+            $queue = config('whatsapp.queue_name', 'default');
+
+            if ($connection) {
+                dispatch($job)->onConnection($connection)->onQueue($queue);
+            } else {
+                dispatch($job)->onQueue($queue);
+            }
+
+            return $log;
+        }
+
+        return $this->sendNow($account, $mediaKind, $to, $message, $sender);
     }
 
     /**

@@ -71,6 +71,16 @@ class WhatsAppMessageBuilderTest extends TestCase
     }
 
     #[Test]
+    public function it_builds_template_components_from_variables(): void
+    {
+        $components = WhatsAppMessageBuilder::templateComponentsFromVariables(['Ali', '#12345']);
+
+        $this->assertSame('body', $components[0]['type']);
+        $this->assertSame('Ali', $components[0]['parameters'][0]['text']);
+        $this->assertSame('#12345', $components[0]['parameters'][1]['text']);
+    }
+
+    #[Test]
     public function it_builds_interactive_button_and_list_payloads(): void
     {
         $buttons = WhatsAppMessageBuilder::interactiveButtons('923001234567', 'Choose', [

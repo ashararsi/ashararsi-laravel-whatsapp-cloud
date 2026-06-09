@@ -9,6 +9,8 @@ use Vendor\LaravelWhatsAppCloud\Commands\DoctorCommand;
 use Vendor\LaravelWhatsAppCloud\Commands\InstallCommand;
 use Vendor\LaravelWhatsAppCloud\Commands\RunCampaignsCommand;
 use Vendor\LaravelWhatsAppCloud\Commands\SendScheduledMessagesCommand;
+use Vendor\LaravelWhatsAppCloud\Commands\SyncBusinessCommand;
+use Vendor\LaravelWhatsAppCloud\Commands\SyncNumbersCommand;
 use Vendor\LaravelWhatsAppCloud\Commands\SyncTemplatesCommand;
 use Vendor\LaravelWhatsAppCloud\Commands\TestCommand;
 use Vendor\LaravelWhatsAppCloud\Contracts\AccountResolverInterface;
@@ -25,14 +27,19 @@ use Vendor\LaravelWhatsAppCloud\Services\AiAutoReplyEngine;
 use Vendor\LaravelWhatsAppCloud\Services\AnalyticsService;
 use Vendor\LaravelWhatsAppCloud\Services\AudioTranscriptionService;
 use Vendor\LaravelWhatsAppCloud\Services\AutoReplyEngine;
+use Vendor\LaravelWhatsAppCloud\Services\BusinessProfileSyncService;
 use Vendor\LaravelWhatsAppCloud\Services\CampaignService;
 use Vendor\LaravelWhatsAppCloud\Services\ConversationService;
 use Vendor\LaravelWhatsAppCloud\Services\DashboardService;
+use Vendor\LaravelWhatsAppCloud\Services\GraphApiClient;
 use Vendor\LaravelWhatsAppCloud\Services\MediaDownloadService;
+use Vendor\LaravelWhatsAppCloud\Services\MediaUploadService;
 use Vendor\LaravelWhatsAppCloud\Services\MessageLogger;
 use Vendor\LaravelWhatsAppCloud\Services\OpenAiService;
+use Vendor\LaravelWhatsAppCloud\Services\PhoneNumberSyncService;
 use Vendor\LaravelWhatsAppCloud\Services\ProviderFactory;
 use Vendor\LaravelWhatsAppCloud\Services\ScheduledMessageService;
+use Vendor\LaravelWhatsAppCloud\Services\SystemHealthService;
 use Vendor\LaravelWhatsAppCloud\Services\TemplateSyncService;
 use Vendor\LaravelWhatsAppCloud\Services\TwilioSignatureValidator;
 use Vendor\LaravelWhatsAppCloud\Services\TwilioWebhookHandler;
@@ -48,8 +55,13 @@ class WhatsAppServiceProvider extends ServiceProvider
     {
         $this->mergeConfigFrom(__DIR__.'/../config/whatsapp.php', 'whatsapp');
 
+        $this->app->singleton(GraphApiClient::class);
         $this->app->singleton(WhatsAppClientInterface::class, WhatsAppClient::class);
         $this->app->singleton(ProviderFactory::class);
+        $this->app->singleton(MediaUploadService::class);
+        $this->app->singleton(BusinessProfileSyncService::class);
+        $this->app->singleton(PhoneNumberSyncService::class);
+        $this->app->singleton(SystemHealthService::class);
         $this->app->singleton(AccountResolverInterface::class, AccountResolver::class);
         $this->app->singleton(MessageLoggerInterface::class, MessageLogger::class);
         $this->app->singleton(ConversationRecorderInterface::class, ConversationService::class);
@@ -76,6 +88,7 @@ class WhatsAppServiceProvider extends ServiceProvider
                 $app->make(AccountResolverInterface::class),
                 $app->make(MessageLoggerInterface::class),
                 $app->make(ConversationRecorderInterface::class),
+                $app->make(MediaUploadService::class),
             );
         });
 
@@ -103,6 +116,8 @@ class WhatsAppServiceProvider extends ServiceProvider
                 TestCommand::class,
                 DoctorCommand::class,
                 SyncTemplatesCommand::class,
+                SyncBusinessCommand::class,
+                SyncNumbersCommand::class,
                 RunCampaignsCommand::class,
                 SendScheduledMessagesCommand::class,
             ]);

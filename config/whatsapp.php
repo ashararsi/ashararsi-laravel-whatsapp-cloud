@@ -19,7 +19,26 @@ return [
 
     'api_base_url' => env('WHATSAPP_API_BASE_URL', 'https://graph.facebook.com'),
 
+    'graph_api' => [
+        'timeout' => env('WHATSAPP_GRAPH_API_TIMEOUT', 30),
+        'max_retries' => env('WHATSAPP_GRAPH_API_MAX_RETRIES', 3),
+        'retry_base_delay_ms' => env('WHATSAPP_GRAPH_API_RETRY_BASE_MS', 1000),
+        'retry_max_delay_ms' => env('WHATSAPP_GRAPH_API_RETRY_MAX_MS', 60000),
+    ],
+
+    'cost' => [
+        'utility' => env('WHATSAPP_COST_UTILITY', 0.005),
+        'marketing' => env('WHATSAPP_COST_MARKETING', 0.015),
+        'authentication' => env('WHATSAPP_COST_AUTHENTICATION', 0.004),
+        'service' => env('WHATSAPP_COST_SERVICE', 0.0),
+    ],
+
     'queue_enabled' => env('WHATSAPP_QUEUE_ENABLED', true),
+
+    'queue' => [
+        'tries' => env('WHATSAPP_QUEUE_TRIES', 3),
+        'backoff' => [10, 30, 60],
+    ],
 
     'queue_connection' => env('WHATSAPP_QUEUE_CONNECTION', null),
 

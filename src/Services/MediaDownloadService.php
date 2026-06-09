@@ -2,7 +2,6 @@
 
 namespace Vendor\LaravelWhatsAppCloud\Services;
 
-use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Storage;
 use Vendor\LaravelWhatsAppCloud\Events\MediaDownloaded;
 use Vendor\LaravelWhatsAppCloud\Exceptions\WhatsAppException;
@@ -12,6 +11,10 @@ use Vendor\LaravelWhatsAppCloud\Models\WhatsAppMediaFile;
 
 class MediaDownloadService
 {
+    public function __construct(
+        protected GraphApiClient $graphApi,
+    ) {}
+
     public function downloadFromIncomingMessage(
         WhatsAppAccount $account,
         array $webhookMessage,
@@ -77,17 +80,7 @@ class MediaDownloadService
      */
     protected function fetchMediaMetadata(WhatsAppAccount $account, string $mediaId): array
     {
-        $version = config('whatsapp.api_version', 'v21.0');
-        $base = rtrim((string) config('whatsapp.api_base_url', 'https://graph.facebook.com'), '/');
-
-        $response = Http::withToken((string) $account->access_token)
-            ->get("{$base}/{$version}/{$mediaId}");
-
-        if (! $response->successful()) {
-            throw new WhatsAppException('Failed to fetch media metadata.', $response->json() ?? []);
-        }
-
-        return $response->json() ?? [];
+        return $this->graphApi->get((string) $account->access_token, $mediaId);
     }
 
     protected function downloadMediaBinary(WhatsAppAccount $account, string $url): string
@@ -96,12 +89,6 @@ class MediaDownloadService
             throw new WhatsAppException('Media URL missing from Meta response.');
         }
 
-        $response = Http::withToken((string) $account->access_token)->get($url);
-
-        if (! $response->successful()) {
-            throw new WhatsAppException('Failed to download media binary.');
-        }
-
-        return $response->body();
+        return $this->graphApi->getBinary((string) $account->access_token, $url);
     }
 }

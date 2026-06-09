@@ -25,6 +25,30 @@ class WhatsAppMessageBuilder
     /**
      * @param  array<string, mixed>  $components
      */
+    /**
+     * @param  array<int, string|int|float>  $variables
+     * @return array<int, array<string, mixed>>
+     */
+    public static function templateComponentsFromVariables(array $variables): array
+    {
+        if ($variables === []) {
+            return [];
+        }
+
+        return [
+            [
+                'type' => 'body',
+                'parameters' => array_map(
+                    fn (string|int|float $value) => [
+                        'type' => 'text',
+                        'text' => (string) $value,
+                    ],
+                    array_values($variables),
+                ),
+            ],
+        ];
+    }
+
     public static function template(
         string $to,
         string $name,
@@ -70,6 +94,25 @@ class WhatsAppMessageBuilder
         ];
     }
 
+    public static function imageFromId(string $to, string $mediaId, ?string $caption = null): array
+    {
+        self::assertNonEmpty($mediaId, 'Media ID cannot be empty.');
+
+        $image = ['id' => $mediaId];
+
+        if ($caption !== null) {
+            $image['caption'] = $caption;
+        }
+
+        return [
+            'messaging_product' => 'whatsapp',
+            'recipient_type' => 'individual',
+            'to' => self::normalizePhone($to),
+            'type' => 'image',
+            'image' => $image,
+        ];
+    }
+
     public static function document(
         string $to,
         string $link,
@@ -79,6 +122,33 @@ class WhatsAppMessageBuilder
         self::assertValidMediaUrl($link);
 
         $document = ['link' => $link];
+
+        if ($filename !== null) {
+            $document['filename'] = $filename;
+        }
+
+        if ($caption !== null) {
+            $document['caption'] = $caption;
+        }
+
+        return [
+            'messaging_product' => 'whatsapp',
+            'recipient_type' => 'individual',
+            'to' => self::normalizePhone($to),
+            'type' => 'document',
+            'document' => $document,
+        ];
+    }
+
+    public static function documentFromId(
+        string $to,
+        string $mediaId,
+        ?string $filename = null,
+        ?string $caption = null,
+    ): array {
+        self::assertNonEmpty($mediaId, 'Media ID cannot be empty.');
+
+        $document = ['id' => $mediaId];
 
         if ($filename !== null) {
             $document['filename'] = $filename;

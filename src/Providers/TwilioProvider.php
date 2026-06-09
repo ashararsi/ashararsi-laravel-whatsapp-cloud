@@ -70,6 +70,25 @@ class TwilioProvider implements SupportsInteractiveMessages, WhatsAppProviderInt
         return $this->sendMedia($to, $link);
     }
 
+    public function sendImageFile(string $to, string $filePath, ?string $caption = null): ProviderResult
+    {
+        throw new WhatsAppException('Twilio provider does not support local file upload. Use sendImage() with a public URL.');
+    }
+
+    public function sendDocumentFile(
+        string $to,
+        string $filePath,
+        ?string $filename = null,
+        ?string $caption = null,
+    ): ProviderResult {
+        throw new WhatsAppException('Twilio provider does not support local file upload. Use sendDocument() with a public URL.');
+    }
+
+    public function sendFile(string $to, string $filePath, ?string $caption = null): ProviderResult
+    {
+        throw new WhatsAppException('Twilio provider does not support local file upload. Use sendImage() or sendDocument() with a public URL.');
+    }
+
     public function sendLocation(
         string $to,
         float $latitude,
