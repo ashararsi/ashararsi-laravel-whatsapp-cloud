@@ -4,7 +4,8 @@
 
 | Version | Supported          |
 | ------- | ------------------ |
-| 1.x     | :white_check_mark: |
+| 1.0.x   | :white_check_mark: |
+| < 1.0   | :x:                |
 
 ## Reporting a Vulnerability
 
@@ -32,12 +33,10 @@ Gate::define('manage-whatsapp', fn ($user) => $user->isAdmin());
 ],
 ```
 
-2. **Enable webhook signature verification**:
-
-```env
-WHATSAPP_APP_SECRET=your-meta-app-secret
-WHATSAPP_WEBHOOK_REQUIRE_SIGNATURE=true
-```
+2. **Enable webhook signature verification** in **Admin → Settings** (`/admin/whatsapp/settings`):
+   - Set a **Global App Secret** or store `app_secret` per Meta account (recommended)
+   - Enable **Require Meta Webhook Signature** in production
+   - Keep **Require Twilio Webhook Signature** enabled (default)
 
 3. **Never commit access tokens** — Use encrypted database storage (enabled by default).
 

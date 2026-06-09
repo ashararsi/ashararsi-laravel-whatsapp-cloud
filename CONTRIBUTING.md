@@ -17,7 +17,7 @@ vendor/bin/phpunit
 2. Add or update tests for any behavior change.
 3. Ensure `vendor/bin/phpunit` passes.
 4. Follow existing code style and PSR-4 namespaces.
-5. Update `CHANGELOG.md` under an `Unreleased` section.
+5. Update `CHANGELOG.md` under the `[Unreleased]` section (see [Keep a Changelog](https://keepachangelog.com/)).
 
 ## Reporting Bugs
 

@@ -1,8 +1,28 @@
 # Laravel WhatsApp Cloud
 
 [![Tests](https://github.com/ashararsi/ashararsi-laravel-whatsapp-cloud/actions/workflows/test.yml/badge.svg?branch=main)](https://github.com/ashararsi/ashararsi-laravel-whatsapp-cloud/actions/workflows/test.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+[![Latest Stable Version](https://img.shields.io/badge/release-v1.0.0-green.svg)](https://github.com/ashararsi/ashararsi-laravel-whatsapp-cloud/releases/tag/v1.0.0)
 
-A production-ready **WhatsApp conversation platform** for Laravel. Send messages via **Meta Cloud API** or **Twilio WhatsApp** using one unified fluent API, with contacts, conversations, message timelines, multi-account support, webhooks, queues, notifications, and an admin panel.
+**v1.0.0** — First public stable release.
+
+A production-ready **WhatsApp conversation platform** for Laravel. Send messages via **Meta Cloud API** or **Twilio WhatsApp** using one unified fluent API, with contacts, conversations, campaigns, analytics, AI automation, and a full admin panel.
+
+## Features
+
+- **Meta Cloud API** — Direct Graph API integration with retry, rate-limit handling, and media upload
+- **Twilio Provider** — Unified API for Twilio WhatsApp messaging
+- **Multi Account Support** — Multiple Meta/Twilio accounts with encrypted credentials
+- **Conversations** — Inbox with message timeline and reply form
+- **Contacts** — CRM with notes and tags
+- **Campaigns** — Broadcast messaging with queue support
+- **Analytics** — Dashboard with charts, delivery rate, and cost estimation
+- **AI Auto Reply** — OpenAI-powered automatic responses
+- **Workflow Engine** — Configurable multi-step AI workflows
+- **Template Sync** — Admin UI and CLI to sync Meta templates
+- **Scheduled Messages** — Deferred send via `whatsapp:scheduled:send`
+- **Admin Panel** — Bootstrap UI for accounts, settings, templates, and system monitoring
+- **Database Settings** — Runtime configuration without `.env` changes
 
 ## Requirements
 
@@ -17,6 +37,8 @@ php artisan whatsapp:install
 php artisan migrate
 ```
 
+Configure runtime settings at `/admin/whatsapp/settings` after migration.
+
 ## Provider Comparison
 
 | Feature | Meta Cloud API | Twilio WhatsApp |
@@ -30,15 +52,23 @@ php artisan migrate
 | Message ID | `wamid.*` | `SM*` (Twilio SID) |
 | Best for | Direct Meta integration | Teams already on Twilio |
 
-## Quick Start (API unchanged)
+## Quick Start
 
 ```php
 use Vendor\LaravelWhatsAppCloud\Facades\WhatsApp;
 
+// Send a text message (uses default account)
 WhatsApp::send('923001234567', 'Hello World');
+
+// Target a specific account
 WhatsApp::account(1)->sendText('923001234567', 'Hello');
 WhatsApp::using('marketing')->send('923001234567', 'Sale Started');
+
+// Queue for background delivery
 WhatsApp::queue()->send('923001234567', 'Queued message');
+
+// Send a template with variables
+WhatsApp::template('923001234567', 'order_confirmed', ['Ali', '#12345']);
 ```
 
 ### Supported Methods
@@ -300,7 +330,7 @@ Set `WHATSAPP_OPENAI_API_KEY` in `.env` (secret — not stored in DB). Enable fe
 - **Media download** — Meta incoming attachments saved to disk (`WHATSAPP_MEDIA_DISK` in `.env`)
 - **Audio transcription** — Whisper via OpenAI when enabled
 
-> **Not included in v2.0.0-beta:** multi-tenant data isolation and Filament admin resources. The package ships a Bootstrap admin panel; publish views to integrate with your own layout.
+> **Scope note:** Multi-tenant data isolation and Filament admin resources are not included in v1.0.0. The package ships a Bootstrap admin panel; publish views to integrate with your own layout.
 
 ## Admin Panel
 
