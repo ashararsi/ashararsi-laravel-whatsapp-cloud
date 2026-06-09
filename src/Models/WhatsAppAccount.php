@@ -1,0 +1,102 @@
+<?php
+
+namespace Vendor\LaravelWhatsAppCloud\Models;
+
+use Illuminate\Database\Eloquent\Attributes\ObservedBy;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Vendor\LaravelWhatsAppCloud\Observers\WhatsAppAccountObserver;
+
+#[ObservedBy([WhatsAppAccountObserver::class])]
+class WhatsAppAccount extends Model
+{
+    public const PROVIDER_META = 'meta';
+
+    public const PROVIDER_TWILIO = 'twilio';
+
+    protected $table = 'whatsapp_accounts';
+
+    protected $fillable = [
+        'name',
+        'provider',
+        'phone_number',
+        'phone_number_id',
+        'access_token',
+        'app_secret',
+        'webhook_verify_token',
+        'twilio_sid',
+        'twilio_token',
+        'twilio_whatsapp_number',
+        'is_default',
+        'is_active',
+    ];
+
+    /**
+     * @var list<string>
+     */
+    protected $hidden = [
+        'access_token',
+        'app_secret',
+        'twilio_token',
+    ];
+
+    protected function casts(): array
+    {
+        return [
+            'access_token' => 'encrypted',
+            'app_secret' => 'encrypted',
+            'twilio_token' => 'encrypted',
+            'is_default' => 'boolean',
+            'is_active' => 'boolean',
+        ];
+    }
+
+    public function messages(): HasMany
+    {
+        return $this->hasMany(WhatsAppMessage::class, 'account_id');
+    }
+
+    public function contacts(): HasMany
+    {
+        return $this->hasMany(WhatsAppContact::class, 'account_id');
+    }
+
+    public function conversations(): HasMany
+    {
+        return $this->hasMany(WhatsAppConversation::class, 'account_id');
+    }
+
+    public function scopeActive($query)
+    {
+        return $query->where('is_active', true);
+    }
+
+    public function scopeDefault($query)
+    {
+        return $query->where('is_default', true);
+    }
+
+    public function isMeta(): bool
+    {
+        return ($this->provider ?? self::PROVIDER_META) === self::PROVIDER_META;
+    }
+
+    public function isTwilio(): bool
+    {
+        return $this->provider === self::PROVIDER_TWILIO;
+    }
+
+    public function providerLabel(): string
+    {
+        return match ($this->provider ?? self::PROVIDER_META) {
+            self::PROVIDER_TWILIO => 'Twilio WhatsApp',
+            default => 'Meta Cloud API',
+        };
+    }
+
+    public static function setDefault(self $account): void
+    {
+        static::query()->where('id', '!=', $account->id)->update(['is_default' => false]);
+        $account->update(['is_default' => true]);
+    }
+}

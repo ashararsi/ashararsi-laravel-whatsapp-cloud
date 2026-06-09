@@ -1,0 +1,9 @@
+/vendor/
+/.phpunit.cache/
+composer.lock
+.phpunit.result.cache
+.idea/
+.vscode/
+.DS_Store
+
+/whatsapp-test-app/
