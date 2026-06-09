@@ -8,7 +8,7 @@
 
 ## Reporting a Vulnerability
 
-If you discover a security vulnerability, please email **security@example.com** instead of using the public issue tracker.
+If you discover a security vulnerability, please report it via [GitHub Security Advisories](https://github.com/ashararsi/ashararsi-laravel-whatsapp-cloud/security/advisories/new) instead of using the public issue tracker.
 
 Include:
 

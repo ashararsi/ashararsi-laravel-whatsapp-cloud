@@ -1,6 +1,6 @@
 # Changelog
 
-All notable changes to `vendor/laravel-whatsapp-cloud` will be documented in this file.
+All notable changes to `ashararsi/laravel-whatsapp-cloud` will be documented in this file.
 
 ## [1.2.0] - 2026-06-09
 
@@ -54,4 +54,6 @@ All notable changes to `vendor/laravel-whatsapp-cloud` will be documented in thi
 - Improved database indexes and unique constraints
 - Default template language code set to `en_US` per Meta conventions
 
-[1.0.0]: https://github.com/vendor/laravel-whatsapp-cloud/releases/tag/v1.0.0
+[1.2.0]: https://github.com/ashararsi/ashararsi-laravel-whatsapp-cloud/releases/tag/v1.2.0
+[1.1.0]: https://github.com/ashararsi/ashararsi-laravel-whatsapp-cloud/releases/tag/v1.1.0
+[1.0.0]: https://github.com/ashararsi/ashararsi-laravel-whatsapp-cloud/releases/tag/v1.0.0

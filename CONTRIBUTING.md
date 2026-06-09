@@ -5,8 +5,8 @@ Thank you for contributing to Laravel WhatsApp Cloud.
 ## Development Setup
 
 ```bash
-git clone https://github.com/vendor/laravel-whatsapp-cloud.git
-cd laravel-whatsapp-cloud
+git clone https://github.com/ashararsi/ashararsi-laravel-whatsapp-cloud.git
+cd ashararsi-laravel-whatsapp-cloud
 composer install
 vendor/bin/phpunit
 ```

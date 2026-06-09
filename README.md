@@ -1,6 +1,6 @@
 # Laravel WhatsApp Cloud
 
-[![Tests](https://github.com/vendor/laravel-whatsapp-cloud/actions/workflows/test.yml/badge.svg)](https://github.com/vendor/laravel-whatsapp-cloud/actions/workflows/test.yml)
+[![Tests](https://github.com/ashararsi/ashararsi-laravel-whatsapp-cloud/actions/workflows/test.yml/badge.svg?branch=main)](https://github.com/ashararsi/ashararsi-laravel-whatsapp-cloud/actions/workflows/test.yml)
 
 A production-ready **WhatsApp conversation platform** for Laravel. Send messages via **Meta Cloud API** or **Twilio WhatsApp** using one unified fluent API, with contacts, conversations, message timelines, multi-account support, webhooks, queues, notifications, and an admin panel.
 
@@ -12,7 +12,7 @@ A production-ready **WhatsApp conversation platform** for Laravel. Send messages
 ## Installation
 
 ```bash
-composer require vendor/laravel-whatsapp-cloud
+composer require ashararsi/laravel-whatsapp-cloud
 php artisan whatsapp:install
 php artisan migrate
 ```
