@@ -102,6 +102,36 @@
                 </ul>
             </div>
         </div>
+        <div class="col-lg-6">
+            <div class="card shadow-sm">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <span>Runtime Settings (DB)</span>
+                    <a href="{{ route('whatsapp.admin.settings.edit') }}" class="btn btn-sm btn-outline-success">Edit</a>
+                </div>
+                <ul class="list-group list-group-flush">
+                    <li class="list-group-item d-flex justify-content-between">
+                        <span>Graph API Timeout</span>
+                        <span>{{ $health['settings']['graph_api.timeout'] ?? '—' }}s</span>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between">
+                        <span>Graph API Max Retries</span>
+                        <span>{{ $health['settings']['graph_api.max_retries'] ?? '—' }}</span>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between">
+                        <span>Queue Tries</span>
+                        <span>{{ $health['settings']['queue.tries'] ?? '—' }}</span>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between">
+                        <span>Cost Utility</span>
+                        <span>${{ number_format((float) ($health['settings']['cost.utility'] ?? 0), 4) }}</span>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between">
+                        <span>Cost Marketing</span>
+                        <span>${{ number_format((float) ($health['settings']['cost.marketing'] ?? 0), 4) }}</span>
+                    </li>
+                </ul>
+            </div>
+        </div>
         <div class="col-12">
             <div class="card shadow-sm">
                 <div class="card-header">Rate Limit Usage (Latest)</div>

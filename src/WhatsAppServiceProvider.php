@@ -47,6 +47,7 @@ use Vendor\LaravelWhatsAppCloud\Services\WebhookHandler;
 use Vendor\LaravelWhatsAppCloud\Services\WebhookSignatureValidator;
 use Vendor\LaravelWhatsAppCloud\Services\WhatsAppClient;
 use Vendor\LaravelWhatsAppCloud\Services\WhatsAppManager;
+use Vendor\LaravelWhatsAppCloud\Services\WhatsAppSettingsService;
 use Vendor\LaravelWhatsAppCloud\Services\WorkflowEngine;
 
 class WhatsAppServiceProvider extends ServiceProvider
@@ -62,6 +63,7 @@ class WhatsAppServiceProvider extends ServiceProvider
         $this->app->singleton(BusinessProfileSyncService::class);
         $this->app->singleton(PhoneNumberSyncService::class);
         $this->app->singleton(SystemHealthService::class);
+        $this->app->singleton(WhatsAppSettingsService::class);
         $this->app->singleton(AccountResolverInterface::class, AccountResolver::class);
         $this->app->singleton(MessageLoggerInterface::class, MessageLogger::class);
         $this->app->singleton(ConversationRecorderInterface::class, ConversationService::class);
@@ -126,6 +128,10 @@ class WhatsAppServiceProvider extends ServiceProvider
         $this->loadMigrationsFrom(__DIR__.'/../database/migrations');
         $this->loadViewsFrom(__DIR__.'/../resources/views', 'whatsapp');
         $this->loadRoutesFrom(__DIR__.'/../routes/webhook.php');
+
+        $this->app->booted(function () {
+            $this->app->make(WhatsAppSettingsService::class)->applyToConfig();
+        });
 
         if (config('whatsapp.admin.enabled', true)) {
             $this->loadRoutesFrom(__DIR__.'/../routes/admin.php');

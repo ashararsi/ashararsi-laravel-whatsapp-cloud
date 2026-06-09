@@ -12,6 +12,7 @@ class SystemHealthService
 {
     public function __construct(
         protected GraphApiClient $graphApi,
+        protected WhatsAppSettingsService $settings,
     ) {}
 
     /**
@@ -25,6 +26,7 @@ class SystemHealthService
             'api' => $this->apiHealth(),
             'rate_limits' => $this->rateLimitUsage(),
             'failed_jobs' => $this->failedJobsHealth(),
+            'settings' => $this->settings->all(),
             'generated_at' => now()->toIso8601String(),
         ];
     }

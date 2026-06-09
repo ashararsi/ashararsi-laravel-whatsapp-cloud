@@ -6,6 +6,7 @@ use Vendor\LaravelWhatsAppCloud\Http\Controllers\Admin\CampaignController;
 use Vendor\LaravelWhatsAppCloud\Http\Controllers\Admin\ContactController;
 use Vendor\LaravelWhatsAppCloud\Http\Controllers\Admin\ConversationController;
 use Vendor\LaravelWhatsAppCloud\Http\Controllers\Admin\DashboardController;
+use Vendor\LaravelWhatsAppCloud\Http\Controllers\Admin\SettingsController;
 use Vendor\LaravelWhatsAppCloud\Http\Controllers\Admin\SystemController;
 use Vendor\LaravelWhatsAppCloud\Http\Controllers\Admin\TemplateController;
 use Vendor\LaravelWhatsAppCloud\Models\WhatsAppAccount;
@@ -23,6 +24,8 @@ Route::middleware($middleware)
     ->group(function () {
         Route::get('/', DashboardController::class)->name('dashboard');
         Route::get('/system', SystemController::class)->name('system');
+        Route::get('/settings', [SettingsController::class, 'edit'])->name('settings.edit');
+        Route::put('/settings', [SettingsController::class, 'update'])->name('settings.update');
 
         Route::get('/accounts', [AccountController::class, 'index'])->name('accounts.index');
         Route::get('/accounts/create', [AccountController::class, 'create'])->name('accounts.create');

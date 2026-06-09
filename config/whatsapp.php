@@ -19,6 +19,7 @@ return [
 
     'api_base_url' => env('WHATSAPP_API_BASE_URL', 'https://graph.facebook.com'),
 
+    // Defaults only — overridden at runtime by whatsapp_settings table when migrated.
     'graph_api' => [
         'timeout' => env('WHATSAPP_GRAPH_API_TIMEOUT', 30),
         'max_retries' => env('WHATSAPP_GRAPH_API_MAX_RETRIES', 3),

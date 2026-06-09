@@ -107,6 +107,10 @@
                    href="{{ route('whatsapp.admin.accounts.index') }}">
                     <i class="bi bi-gear"></i> Accounts
                 </a>
+                <a class="nav-link {{ request()->routeIs('whatsapp.admin.settings.*') ? 'active' : '' }}"
+                   href="{{ route('whatsapp.admin.settings.edit') }}">
+                    <i class="bi bi-sliders"></i> Settings
+                </a>
                 <a class="nav-link {{ request()->routeIs('whatsapp.admin.system') ? 'active' : '' }}"
                    href="{{ route('whatsapp.admin.system') }}">
                     <i class="bi bi-activity"></i> System
@@ -180,6 +184,10 @@
                 <a class="nav-link text-white {{ request()->routeIs('whatsapp.admin.accounts.*') ? 'active' : '' }}"
                    href="{{ route('whatsapp.admin.accounts.index') }}">
                     <i class="bi bi-gear me-2"></i> Accounts
+                </a>
+                <a class="nav-link text-white {{ request()->routeIs('whatsapp.admin.settings.*') ? 'active' : '' }}"
+                   href="{{ route('whatsapp.admin.settings.edit') }}">
+                    <i class="bi bi-sliders me-2"></i> Settings
                 </a>
                 <a class="nav-link text-white {{ request()->routeIs('whatsapp.admin.system') ? 'active' : '' }}"
                    href="{{ route('whatsapp.admin.system') }}">

@@ -88,6 +88,12 @@ parameters:
 			message: '#^Parameter \#1 \$view of function view expects view\-string\|null, string given\.$#'
 			identifier: argument.type
 			count: 1
+			path: src/Http/Controllers/Admin/SettingsController.php
+
+		-
+			message: '#^Parameter \#1 \$view of function view expects view\-string\|null, string given\.$#'
+			identifier: argument.type
+			count: 1
 			path: src/Http/Controllers/Admin/SystemController.php
 
 		-
