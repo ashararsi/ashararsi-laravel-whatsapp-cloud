@@ -172,6 +172,145 @@ Disable with `WHATSAPP_CONVERSATIONS_ENABLED=false`.
 - **Meta**: Phone Number ID, Access Token, App Secret, Webhook Verify Token
 - **Twilio**: Account SID, Auth Token, WhatsApp Number
 
+## Customizing Admin Views & Theme
+
+All admin UI lives in the **package**. Your Laravel app does not need to create CRUD views manually.
+
+### Where views live
+
+| Location | Purpose |
+|----------|---------|
+| Package (default) | `vendor/ashararsi/laravel-whatsapp-cloud/resources/views/` |
+| Published override | `resources/views/vendor/whatsapp/` in your app |
+
+Package views are loaded with the `whatsapp::` namespace:
+
+```blade
+@extends('whatsapp::layouts.admin')
+```
+
+Laravel uses **published views first**. If a file exists in `resources/views/vendor/whatsapp/`, it overrides the package copy.
+
+### Publish views to your project
+
+```bash
+php artisan vendor:publish --tag=whatsapp-views
+```
+
+Published structure:
+
+```
+resources/views/vendor/whatsapp/
+├── layouts/
+│   └── admin.blade.php          # Master layout (sidebar, menu, alerts)
+└── admin/
+    ├── dashboard.blade.php
+    ├── accounts/
+    ├── contacts/
+    └── conversations/
+```
+
+Re-publish after package updates (overwrites your copies):
+
+```bash
+php artisan vendor:publish --tag=whatsapp-views --force
+```
+
+Back up customized files before using `--force`.
+
+### Option 1 — Enhance the package master layout
+
+Edit the published master layout:
+
+```
+resources/views/vendor/whatsapp/layouts/admin.blade.php
+```
+
+This file controls:
+
+- Sidebar / top navigation
+- Active menu state
+- Flash messages (`success`, `error`)
+- Page wrapper around `@yield('content')`
+- `@yield('title')` for the page heading
+
+Child pages only fill the content section. Example account list:
+
+```blade
+@extends('whatsapp::layouts.admin')
+
+@section('title', 'WhatsApp Accounts')
+
+@section('content')
+    {{-- your table / forms here --}}
+@endsection
+```
+
+Add your CSS, JS, fonts, or branding inside `admin.blade.php` (or link your existing admin assets).
+
+### Option 2 — Use your app's main admin theme (recommended)
+
+If your project already has a layout (Filament, AdminLTE, custom `layouts.app`, etc.), point package pages to **your** layout instead of the package default.
+
+**Step 1.** Publish views:
+
+```bash
+php artisan vendor:publish --tag=whatsapp-views
+```
+
+**Step 2.** Change `@extends` in published admin pages. Example for accounts index:
+
+```blade
+{{-- resources/views/vendor/whatsapp/admin/accounts/index.blade.php --}}
+@extends('layouts.app')   {{-- your app master layout --}}
+
+@section('content')
+    @include('whatsapp::admin.accounts.partials.header')
+    {{-- keep existing table markup from the published file --}}
+@endsection
+```
+
+**Step 3.** Move package navigation into your sidebar. Reuse the same routes:
+
+```blade
+<a href="{{ route('whatsapp.admin.dashboard') }}">Dashboard</a>
+<a href="{{ route('whatsapp.admin.contacts.index') }}">Contacts</a>
+<a href="{{ route('whatsapp.admin.conversations.index') }}">Conversations</a>
+<a href="{{ route('whatsapp.admin.accounts.index') }}">Accounts</a>
+```
+
+**Step 4.** Optionally replace only the master layout by making your layout extend the package structure, or delete sidebar from `layouts/admin.blade.php` and `@include` your global header/sidebar.
+
+### Option 3 — Override a single page
+
+You do not need to publish everything. Publish once, then edit only the pages you care about:
+
+```
+resources/views/vendor/whatsapp/admin/accounts/_form.blade.php
+```
+
+Unpublished pages still load from the package automatically.
+
+### View resolution order
+
+```
+1. resources/views/vendor/whatsapp/...   (your app — wins)
+2. vendor/ashararsi/laravel-whatsapp-cloud/resources/views/...   (package default)
+```
+
+### After customization
+
+```bash
+php artisan view:clear
+```
+
+### Tips
+
+- Keep `@section('content')` and `@section('title')` when overriding child views.
+- Do not rename route names (`whatsapp.admin.*`); controllers depend on them.
+- For provider fields (Meta / Twilio), customize `admin/accounts/_form.blade.php`.
+- For conversation bubbles styling, see CSS classes `timeline-incoming` and `timeline-outgoing` in the master layout.
+
 ## Environment Variables
 
 ```env
