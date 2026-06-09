@@ -21,12 +21,9 @@ v1.2.0 adds migration `2024_01_01_000008_add_direction_to_whatsapp_messages`:
 
 ### 3. Configure per-account Meta secrets (recommended)
 
-Store `app_secret` on each Meta `WhatsAppAccount` record. Webhook verification uses the account secret first, then falls back to `WHATSAPP_APP_SECRET`.
+Store `app_secret` on each Meta `WhatsAppAccount` record. Webhook verification uses the account secret first, then falls back to the **Global App Secret** in **Admin → Settings** (`/admin/whatsapp/settings`).
 
-```env
-WHATSAPP_WEBHOOK_REQUIRE_SIGNATURE=true
-WHATSAPP_APP_SECRET=your-fallback-secret
-```
+Enable **Require Meta Webhook Signature** in the same settings page for production.
 
 ### 4. Configure Twilio webhooks
 
@@ -37,9 +34,7 @@ In Twilio Console, set:
 | Incoming | `https://your-app.com/whatsapp/twilio/webhook` |
 | Status | `https://your-app.com/whatsapp/twilio/status` |
 
-```env
-WHATSAPP_TWILIO_REQUIRE_SIGNATURE=true
-```
+Enable **Require Twilio Webhook Signature** in **Admin → Settings** (enabled by default).
 
 ### 5. Verify deployment
 
@@ -59,5 +54,6 @@ Resolve any **ERROR** items before going live.
 
 ### New optional features
 
-- Inbox reply queue checkbox (requires `WHATSAPP_QUEUE_ENABLED=true`)
-- Incoming rows in `whatsapp_messages` when `WHATSAPP_LOG_MESSAGES=true` (default)
+- Inbox reply queue checkbox (requires **Queue Outgoing Messages** enabled in Admin → Settings)
+- Incoming rows in `whatsapp_messages` when **Log Outgoing Messages** is enabled (default)
+- Runtime settings UI at `/admin/whatsapp/settings` (database-backed, replaces former `.env` toggles)

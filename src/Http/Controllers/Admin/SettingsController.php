@@ -6,22 +6,18 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
 use Illuminate\View\View;
+use Vendor\LaravelWhatsAppCloud\Models\WhatsAppSetting;
 use Vendor\LaravelWhatsAppCloud\Services\WhatsAppSettingsService;
 
 class SettingsController extends Controller
 {
     public function edit(WhatsAppSettingsService $settings): View
     {
-        $definitions = $settings->definitions();
-        $values = $settings->all();
-
-        $groups = [
-            'graph_api' => 'Graph API',
-            'cost' => 'Message Cost Analytics',
-            'queue' => 'Queue Resilience',
-        ];
-
-        return view('whatsapp::admin.settings.edit', compact('definitions', 'values', 'groups'));
+        return view('whatsapp::admin.settings.edit', [
+            'definitions' => $settings->definitions(),
+            'values' => $settings->all(),
+            'groups' => $settings->groups(),
+        ]);
     }
 
     public function update(Request $request, WhatsAppSettingsService $settings): RedirectResponse
@@ -30,12 +26,26 @@ class SettingsController extends Controller
         $rules = [];
 
         foreach ($definitions as $key => $definition) {
-            $field = str_replace('.', '_', $key);
+            $field = $this->fieldName($key);
+
+            if ($definition['type'] === WhatsAppSetting::TYPE_BOOLEAN) {
+                $rules[$field] = ['required', 'in:0,1'];
+
+                continue;
+            }
+
+            if (($definition['nullable'] ?? false) === true) {
+                $rules[$field] = ['nullable', 'string', 'max:255'];
+
+                continue;
+            }
 
             $rules[$field] = match ($definition['type']) {
-                'integer' => ['required', 'integer', 'min:'.($definition['min'] ?? 0), 'max:'.($definition['max'] ?? 999999)],
-                'float' => ['required', 'numeric', 'min:'.($definition['min'] ?? 0), 'max:'.($definition['max'] ?? 999999)],
-                default => ['required', 'string'],
+                WhatsAppSetting::TYPE_INTEGER => ['required', 'integer', 'min:'.($definition['min'] ?? 0), 'max:'.($definition['max'] ?? 999999)],
+                WhatsAppSetting::TYPE_FLOAT => ['required', 'numeric', 'min:'.($definition['min'] ?? 0), 'max:'.($definition['max'] ?? 999999)],
+                default => isset($definition['options'])
+                    ? ['required', 'string', 'in:'.implode(',', $definition['options'])]
+                    : ['required', 'string', 'max:255'],
             };
         }
 
@@ -44,8 +54,8 @@ class SettingsController extends Controller
         $payload = [];
 
         foreach ($definitions as $key => $definition) {
-            $field = str_replace('.', '_', $key);
-            $payload[$key] = $validated[$field];
+            $field = $this->fieldName($key);
+            $payload[$key] = $validated[$field] ?? ($definition['nullable'] ?? false ? '' : $definition['default']);
         }
 
         $settings->updateMany($payload);
@@ -53,5 +63,10 @@ class SettingsController extends Controller
         return redirect()
             ->route('whatsapp.admin.settings.edit')
             ->with('success', 'WhatsApp settings updated successfully.');
+    }
+
+    protected function fieldName(string $key): string
+    {
+        return str_replace('.', '_', $key);
     }
 }

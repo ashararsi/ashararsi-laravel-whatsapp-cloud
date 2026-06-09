@@ -87,10 +87,10 @@ WhatsAppAccount::create([
 GET/POST  /whatsapp/webhook
 ```
 
-```env
-WHATSAPP_APP_SECRET=your-meta-app-secret
-WHATSAPP_WEBHOOK_REQUIRE_SIGNATURE=true
-```
+In **Admin → Settings** (`/admin/whatsapp/settings`):
+
+- Set **Global App Secret** (or store per-account `app_secret` on `whatsapp_accounts` — recommended)
+- Enable **Require Meta Webhook Signature** for production
 
 ## Twilio WhatsApp Setup
 
@@ -124,9 +124,7 @@ POST  /whatsapp/twilio/webhook   (inbound messages)
 POST  /whatsapp/twilio/status    (delivery status callbacks)
 ```
 
-```env
-WHATSAPP_TWILIO_REQUIRE_SIGNATURE=true
-```
+Enable **Require Twilio Webhook Signature** in **Admin → Settings** (enabled by default).
 
 Twilio signs requests with `X-Twilio-Signature` using the account **Auth Token** stored on each `WhatsAppAccount`.
 
@@ -186,6 +184,8 @@ Disable with `WHATSAPP_CONVERSATIONS_ENABLED=false`.
 | `/admin/whatsapp/campaigns` | Broadcast campaigns |
 | `/admin/whatsapp/templates` | Message templates (sync, search, filter) |
 | `/admin/whatsapp/accounts` | Account management |
+| `/admin/whatsapp/settings` | Runtime settings (database) |
+| `/admin/whatsapp/system` | Queue, API, and rate-limit health |
 
 ### CRM: Notes & Tags
 
@@ -283,23 +283,21 @@ Create campaigns from `/admin/whatsapp/campaigns` or run pending drafts:
 php artisan whatsapp:campaigns:run
 ```
 
-Set `WHATSAPP_CAMPAIGNS_USE_QUEUE=true` to queue bulk sends.
+Enable **Queue Campaign Sends** in **Admin → Settings** to queue bulk sends.
 
 ### AI & Automation (optional)
 
-Requires `WHATSAPP_OPENAI_API_KEY` and feature flags:
+Set `WHATSAPP_OPENAI_API_KEY` in `.env` (secret — not stored in DB). Enable features in **Admin → Settings**:
 
-```env
-WHATSAPP_AI_ENABLED=true
-WHATSAPP_AI_TRANSCRIPTION_ENABLED=true
-WHATSAPP_AUTO_REPLY_ENABLED=true
-WHATSAPP_PROCESS_INCOMING=true
-WHATSAPP_MEDIA_DOWNLOAD_ENABLED=true
-```
+- **AI Auto Reply**
+- **Audio Transcription**
+- **Keyword Auto Reply**
+- **Process Incoming Messages**
+- **Download Incoming Media**
 
 - **Auto-reply rules** — keyword, first-message, and AI modes (`whatsapp_auto_replies` table)
 - **Workflows** — `whatsapp_ai_workflows` with step fallback when OpenAI is unavailable
-- **Media download** — Meta incoming attachments saved to `WHATSAPP_MEDIA_DISK`
+- **Media download** — Meta incoming attachments saved to disk (`WHATSAPP_MEDIA_DISK` in `.env`)
 - **Audio transcription** — Whisper via OpenAI when enabled
 
 > **Not included in v2.0.0-beta:** multi-tenant data isolation and Filament admin resources. The package ships a Bootstrap admin panel; publish views to integrate with your own layout.
@@ -452,7 +450,7 @@ php artisan view:clear
 
 ## Incoming Messages
 
-Every webhook delivery is logged to `whatsapp_messages` when `WHATSAPP_LOG_MESSAGES=true`:
+Every webhook delivery is logged to `whatsapp_messages` when **Log Outgoing Messages** is enabled in **Admin → Settings**:
 
 | Column | Description |
 |--------|-------------|
@@ -474,24 +472,71 @@ php artisan whatsapp:doctor
 
 Checks database tables, queues, routes, webhook secrets, Meta/Twilio credentials, storage, and cache. Output levels: **PASS**, **WARNING**, **ERROR**.
 
-## Environment Variables
+## Runtime Settings (Database)
+
+Operational settings are stored in the `whatsapp_settings` table and managed from the admin panel. **No `.env` variables are required** for these — changes apply at runtime without redeploying.
+
+**Admin URL:** `/admin/whatsapp/settings`
+
+| Setting key | Default | Group |
+|-------------|---------|-------|
+| `general.default_account` | *(empty)* | General |
+| `general.default_provider` | `meta` | General |
+| `general.api_version` | `v21.0` | General |
+| `webhook.app_secret` | *(empty)* | Webhook |
+| `webhook.require_signature` | `false` | Webhook |
+| `twilio.require_signature` | `true` | Twilio |
+| `graph_api.timeout` | `30` | Graph API |
+| `graph_api.max_retries` | `3` | Graph API |
+| `queue.enabled` | `true` | Queue |
+| `queue.tries` | `3` | Queue |
+| `campaigns.use_queue` | `false` | Campaigns |
+| `cost.utility` / `cost.marketing` | `0.005` / `0.015` | Cost |
+| `ai.enabled` | `false` | AI |
+| `ai.transcription_enabled` | `false` | AI |
+| `auto_reply.enabled` | `true` | Auto Reply |
+| `media.enabled` | `true` | Media |
+| `events.process_incoming` | `true` | Events |
+| `log_messages` | `true` | Logging |
+| `admin.authorization_enabled` | `true` | Admin |
+
+```php
+// Programmatic access
+app(\Vendor\LaravelWhatsAppCloud\Services\WhatsAppSettingsService::class)->get('queue.enabled');
+app(\Vendor\LaravelWhatsAppCloud\Services\WhatsAppSettingsService::class)->updateMany([
+    'webhook.require_signature' => true,
+]);
+```
+
+After `php artisan migrate`, defaults are seeded automatically.
+
+## Environment Variables (infrastructure only)
+
+Use `.env` only for **host-app infrastructure and secrets** — not runtime feature toggles:
 
 ```env
-WHATSAPP_DEFAULT_ACCOUNT=
-WHATSAPP_DEFAULT_PROVIDER=meta
-WHATSAPP_API_VERSION=v21.0
-WHATSAPP_APP_SECRET=
-WHATSAPP_WEBHOOK_REQUIRE_SIGNATURE=false
-WHATSAPP_TWILIO_REQUIRE_SIGNATURE=true
-WHATSAPP_QUEUE_ENABLED=true
-WHATSAPP_CAMPAIGNS_USE_QUEUE=false
-WHATSAPP_AI_ENABLED=false
-WHATSAPP_AI_TRANSCRIPTION_ENABLED=false
-WHATSAPP_AUTO_REPLY_ENABLED=true
-WHATSAPP_MEDIA_DOWNLOAD_ENABLED=true
-WHATSAPP_PROCESS_INCOMING=true
-WHATSAPP_LOG_MESSAGES=true
-WHATSAPP_ADMIN_AUTHORIZATION_ENABLED=true
+# Queue infrastructure
+WHATSAPP_QUEUE_CONNECTION=
+WHATSAPP_QUEUE_NAME=default
+
+# Admin routing (optional)
+WHATSAPP_ADMIN_PREFIX=admin/whatsapp
+WHATSAPP_ADMIN_GATE=manage-whatsapp
+
+# Webhook route prefix
+WHATSAPP_WEBHOOK_PREFIX=whatsapp
+
+# Storage & API base
+WHATSAPP_MEDIA_DISK=local
+WHATSAPP_API_BASE_URL=https://graph.facebook.com
+
+# OpenAI secret (never store in DB)
+WHATSAPP_OPENAI_API_KEY=
+
+# Optional infrastructure
+WHATSAPP_CONVERSATIONS_ENABLED=true
+WHATSAPP_CACHE_ENABLED=true
+WHATSAPP_CACHE_TTL=300
 ```
 
 ## Notifications
@@ -522,7 +567,7 @@ public function toWhatsApp($notifiable): array
 GET/POST  /whatsapp/webhook
 ```
 
-Per-account `app_secret` on `whatsapp_accounts` is used for `X-Hub-Signature-256` verification. Falls back to `WHATSAPP_APP_SECRET` when the account secret is empty.
+Per-account `app_secret` on `whatsapp_accounts` is used for `X-Hub-Signature-256` verification. Falls back to the **Global App Secret** from **Admin → Settings** when the account secret is empty.
 
 ```php
 use Vendor\LaravelWhatsAppCloud\Events\MessageReceived;
@@ -551,11 +596,11 @@ composer format     # Laravel Pint
 
 ## Security Recommendations
 
-1. Set `WHATSAPP_WEBHOOK_REQUIRE_SIGNATURE=true` in production (Meta).
+1. Enable **Require Meta Webhook Signature** in **Admin → Settings** for production.
 2. Store a unique `app_secret` per Meta account when running multiple apps.
-3. Keep `WHATSAPP_TWILIO_REQUIRE_SIGNATURE=true` (default) for Twilio webhooks.
-4. Never commit access tokens or auth tokens — use `.env` or encrypted storage.
-5. Enable `WHATSAPP_ADMIN_AUTHORIZATION_ENABLED=true` and protect admin routes.
+3. Keep **Require Twilio Webhook Signature** enabled (default) for Twilio webhooks.
+4. Never commit access tokens or auth tokens — they are encrypted on `whatsapp_accounts`.
+5. Keep **Require Admin Authorization** enabled and protect admin routes with your gate.
 6. Run `php artisan whatsapp:doctor` after deploy to verify configuration.
 
 See [SECURITY.md](SECURITY.md) and [UPGRADE.md](UPGRADE.md).
@@ -572,4 +617,6 @@ See [SECURITY.md](SECURITY.md) and [UPGRADE.md](UPGRADE.md).
 
 ## License
 
-MIT — see [LICENSE](LICENSE).
+This project is licensed under the [MIT License](LICENSE).
+
+Copyright (c) 2026 Ashar Arsi

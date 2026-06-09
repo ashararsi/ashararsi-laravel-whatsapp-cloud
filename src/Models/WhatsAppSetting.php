@@ -19,6 +19,8 @@ class WhatsAppSetting extends Model
 
     public const TYPE_STRING = 'string';
 
+    public const TYPE_BOOLEAN = 'boolean';
+
     protected $table = 'whatsapp_settings';
 
     protected $fillable = [

@@ -65,7 +65,7 @@ class DoctorCommand extends Command
     protected function checkQueues(): void
     {
         if (! config('whatsapp.queue_enabled', true)) {
-            $this->addWarning('Queue sending is disabled (WHATSAPP_QUEUE_ENABLED=false).');
+            $this->addWarning('Queue sending is disabled (Admin → Settings → Queue Outgoing Messages).');
 
             return;
         }
