@@ -16,20 +16,26 @@ class DashboardService
      *     outgoing_today: int
      * }
      */
-    public function stats(): array
+    public function stats(?int $accountId = null): array
     {
         $today = now()->startOfDay();
 
         return [
-            'total_contacts' => WhatsAppContact::query()->count(),
-            'total_conversations' => WhatsAppConversation::query()->count(),
+            'total_contacts' => WhatsAppContact::query()
+                ->when($accountId, fn ($q) => $q->where('account_id', $accountId))
+                ->count(),
+            'total_conversations' => WhatsAppConversation::query()
+                ->when($accountId, fn ($q) => $q->where('account_id', $accountId))
+                ->count(),
             'incoming_today' => WhatsAppConversationMessage::query()
                 ->where('direction', WhatsAppConversationMessage::DIRECTION_INCOMING)
                 ->where('created_at', '>=', $today)
+                ->when($accountId, fn ($q) => $q->whereHas('conversation', fn ($c) => $c->where('account_id', $accountId)))
                 ->count(),
             'outgoing_today' => WhatsAppConversationMessage::query()
                 ->where('direction', WhatsAppConversationMessage::DIRECTION_OUTGOING)
                 ->where('created_at', '>=', $today)
+                ->when($accountId, fn ($q) => $q->whereHas('conversation', fn ($c) => $c->where('account_id', $accountId)))
                 ->count(),
         ];
     }

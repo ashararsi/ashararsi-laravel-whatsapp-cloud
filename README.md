@@ -25,7 +25,8 @@ php artisan migrate
 | Templates | Native WhatsApp templates | Twilio Content SID |
 | Media | URL-based (`link`) | URL-based (`MediaUrl`) |
 | Location | Native location message | Sent as formatted text |
-| Webhooks | Built-in (`/whatsapp/webhook`) | Use Twilio status callbacks separately |
+| Webhooks | Built-in (`/whatsapp/webhook`) | Built-in (`/whatsapp/twilio/webhook`) |
+| Status callbacks | Meta delivery/read events | `/whatsapp/twilio/status` |
 | Message ID | `wamid.*` | `SM*` (Twilio SID) |
 | Best for | Direct Meta integration | Teams already on Twilio |
 
@@ -113,7 +114,22 @@ WhatsAppAccount::create([
 ]);
 ```
 
-### 3. Send via Twilio provider
+### 3. Configure Twilio Webhooks
+
+Point your Twilio WhatsApp sender to:
+
+```
+POST  /whatsapp/twilio/webhook   (inbound messages)
+POST  /whatsapp/twilio/status    (delivery status callbacks)
+```
+
+```env
+WHATSAPP_TWILIO_REQUIRE_SIGNATURE=true
+```
+
+Twilio signs requests with `X-Twilio-Signature` using the account **Auth Token** stored on each `WhatsAppAccount`.
+
+### 4. Send via Twilio provider
 
 ```php
 WhatsApp::using('twilio-support')->sendText('923001234567', 'Hello from Twilio');
@@ -150,8 +166,10 @@ The package automatically tracks conversations:
 | `whatsapp_conversations` | One thread per contact |
 | `whatsapp_conversation_messages` | Incoming & outgoing timeline |
 
-- **Incoming**: stored automatically from webhooks
+- **Incoming**: stored automatically from Meta and Twilio webhooks
 - **Outgoing**: stored when `WhatsApp::send()` succeeds
+- **Message log**: all directions stored in `whatsapp_messages` (`direction`: `incoming` / `outgoing`)
+- **Reply from inbox**: conversation detail page includes a reply form (sync or queued)
 
 Disable with `WHATSAPP_CONVERSATIONS_ENABLED=false`.
 
@@ -159,11 +177,52 @@ Disable with `WHATSAPP_CONVERSATIONS_ENABLED=false`.
 
 | URL | Feature |
 |-----|---------|
-| `/admin/whatsapp` | Dashboard (contacts, conversations, today's messages) |
+| `/admin/whatsapp` | Dashboard (stats + 7-day message volume) |
 | `/admin/whatsapp/contacts` | Contact list + search |
+| `/admin/whatsapp/contacts/{id}` | Contact detail with notes and tags |
 | `/admin/whatsapp/conversations` | Conversation list + search |
-| `/admin/whatsapp/conversations/{id}` | Message timeline |
+| `/admin/whatsapp/conversations/{id}` | Message timeline + reply form |
+| `/admin/whatsapp/campaigns` | Broadcast campaigns |
 | `/admin/whatsapp/accounts` | Account management |
+
+### CRM: Notes & Tags
+
+On the contact detail page you can:
+
+- Add and view internal notes
+- Create tags and assign them to contacts
+- Remove tags from a contact
+
+Tags are scoped per WhatsApp account.
+
+### Broadcast Campaigns
+
+Create campaigns from `/admin/whatsapp/campaigns` or run pending drafts:
+
+```bash
+php artisan whatsapp:campaigns:run
+```
+
+Set `WHATSAPP_CAMPAIGNS_USE_QUEUE=true` to queue bulk sends.
+
+### AI & Automation (optional)
+
+Requires `WHATSAPP_OPENAI_API_KEY` and feature flags:
+
+```env
+WHATSAPP_AI_ENABLED=true
+WHATSAPP_AI_TRANSCRIPTION_ENABLED=true
+WHATSAPP_AUTO_REPLY_ENABLED=true
+WHATSAPP_PROCESS_INCOMING=true
+WHATSAPP_MEDIA_DOWNLOAD_ENABLED=true
+```
+
+- **Auto-reply rules** — keyword, first-message, and AI modes (`whatsapp_auto_replies` table)
+- **Workflows** — `whatsapp_ai_workflows` with step fallback when OpenAI is unavailable
+- **Media download** — Meta incoming attachments saved to `WHATSAPP_MEDIA_DISK`
+- **Audio transcription** — Whisper via OpenAI when enabled
+
+> **Not included in v2.0.0-beta:** multi-tenant data isolation and Filament admin resources. The package ships a Bootstrap admin panel; publish views to integrate with your own layout.
 
 ## Admin Panel
 
@@ -311,6 +370,30 @@ php artisan view:clear
 - For provider fields (Meta / Twilio), customize `admin/accounts/_form.blade.php`.
 - For conversation bubbles styling, see CSS classes `timeline-incoming` and `timeline-outgoing` in the master layout.
 
+## Incoming Messages
+
+Every webhook delivery is logged to `whatsapp_messages` when `WHATSAPP_LOG_MESSAGES=true`:
+
+| Column | Description |
+|--------|-------------|
+| `direction` | `incoming` or `outgoing` |
+| `from` / `to` | Sender and recipient phone |
+| `whatsapp_message_id` | Meta `wamid.*` or Twilio `SM*` (unique) |
+| `meta_json` | Raw webhook payload |
+| `status` | `received`, `sent`, `delivered`, `read`, `failed` |
+
+Duplicate webhook deliveries are ignored via unique `whatsapp_message_id` constraints.
+
+## Doctor Command
+
+Run a full health check before production:
+
+```bash
+php artisan whatsapp:doctor
+```
+
+Checks database tables, queues, routes, webhook secrets, Meta/Twilio credentials, storage, and cache. Output levels: **PASS**, **WARNING**, **ERROR**.
+
 ## Environment Variables
 
 ```env
@@ -319,7 +402,14 @@ WHATSAPP_DEFAULT_PROVIDER=meta
 WHATSAPP_API_VERSION=v21.0
 WHATSAPP_APP_SECRET=
 WHATSAPP_WEBHOOK_REQUIRE_SIGNATURE=false
+WHATSAPP_TWILIO_REQUIRE_SIGNATURE=true
 WHATSAPP_QUEUE_ENABLED=true
+WHATSAPP_CAMPAIGNS_USE_QUEUE=false
+WHATSAPP_AI_ENABLED=false
+WHATSAPP_AI_TRANSCRIPTION_ENABLED=false
+WHATSAPP_AUTO_REPLY_ENABLED=true
+WHATSAPP_MEDIA_DOWNLOAD_ENABLED=true
+WHATSAPP_PROCESS_INCOMING=true
 WHATSAPP_LOG_MESSAGES=true
 WHATSAPP_ADMIN_AUTHORIZATION_ENABLED=true
 ```
@@ -344,25 +434,61 @@ public function toWhatsApp($notifiable): array
 }
 ```
 
-## Webhooks (Meta)
+## Webhooks
+
+### Meta
+
+```
+GET/POST  /whatsapp/webhook
+```
+
+Per-account `app_secret` on `whatsapp_accounts` is used for `X-Hub-Signature-256` verification. Falls back to `WHATSAPP_APP_SECRET` when the account secret is empty.
 
 ```php
 use Vendor\LaravelWhatsAppCloud\Events\MessageReceived;
 
 Event::listen(MessageReceived::class, function (MessageReceived $event) {
-    // Handle incoming Meta message
+    // Handle incoming message (Meta or Twilio)
 });
 ```
 
-## Testing
+### Twilio
+
+```
+POST  /whatsapp/twilio/webhook
+POST  /whatsapp/twilio/status
+```
+
+Supports inbound text, media, and location payloads plus status callbacks: `queued`, `sent`, `delivered`, `failed`, `undelivered`.
+
+## Testing & Quality
 
 ```bash
 composer test
+composer analyse    # PHPStan
+composer format     # Laravel Pint
 ```
 
-## Security
+## Security Recommendations
 
-See [SECURITY.md](SECURITY.md).
+1. Set `WHATSAPP_WEBHOOK_REQUIRE_SIGNATURE=true` in production (Meta).
+2. Store a unique `app_secret` per Meta account when running multiple apps.
+3. Keep `WHATSAPP_TWILIO_REQUIRE_SIGNATURE=true` (default) for Twilio webhooks.
+4. Never commit access tokens or auth tokens — use `.env` or encrypted storage.
+5. Enable `WHATSAPP_ADMIN_AUTHORIZATION_ENABLED=true` and protect admin routes.
+6. Run `php artisan whatsapp:doctor` after deploy to verify configuration.
+
+See [SECURITY.md](SECURITY.md) and [UPGRADE.md](UPGRADE.md).
+
+## Screenshots
+
+> Placeholder — add screenshots of the admin dashboard, conversation inbox, and account management UI here before release.
+
+| Screenshot | Description |
+|------------|-------------|
+| `docs/screenshots/dashboard.png` | Admin dashboard with stats |
+| `docs/screenshots/inbox.png` | Conversation timeline with reply form |
+| `docs/screenshots/accounts.png` | Multi-account provider setup |
 
 ## License
 

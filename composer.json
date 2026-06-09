@@ -1,6 +1,6 @@
 {
     "name": "ashararsi/laravel-whatsapp-cloud",
-    "description": "Production-ready WhatsApp messaging for Laravel 13 with Meta Cloud API and Twilio providers, multi-account support, webhooks, queues, conversation tracking, notifications, and admin panel",
+    "description": "Production-ready Laravel 13 WhatsApp platform with Meta Cloud API, Twilio, multi-account support, webhooks, conversation inbox, admin panel, queues, and notifications",
     "keywords": [
         "laravel",
         "laravel-package",
@@ -15,7 +15,12 @@
         "webhook",
         "conversations",
         "multi-account",
-        "admin-panel"
+        "admin-panel",
+        "crm",
+        "openai",
+        "ai",
+        "broadcast",
+        "campaign"
     ],
     "homepage": "https://github.com/ashararsi/ashararsi-laravel-whatsapp-cloud",
     "license": "MIT",
@@ -45,6 +50,8 @@
         "illuminate/view": "^13.0"
     },
     "require-dev": {
+        "larastan/larastan": "^3.0",
+        "laravel/pint": "^1.0",
         "mockery/mockery": "^1.6",
         "orchestra/testbench": "^11.0",
         "phpunit/phpunit": "^11.0"
@@ -71,7 +78,10 @@
     },
     "scripts": {
         "test": "phpunit",
-        "test:coverage": "phpunit --coverage-text"
+        "test:coverage": "phpunit --coverage-text",
+        "analyse": "phpstan analyse --memory-limit=512M",
+        "format": "pint",
+        "format:check": "pint --test"
     },
     "config": {
         "sort-packages": true

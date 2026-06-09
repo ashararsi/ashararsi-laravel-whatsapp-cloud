@@ -1,0 +1,13 @@
+{
+    "preset": "laravel",
+    "exclude": [
+        "whatsapp-test-app",
+        "vendor",
+        "build"
+    ],
+    "rules": {
+        "ordered_imports": {
+            "sort_algorithm": "alpha"
+        }
+    }
+}

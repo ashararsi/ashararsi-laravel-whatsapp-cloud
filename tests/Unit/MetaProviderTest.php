@@ -31,7 +31,7 @@ class MetaProviderTest extends TestCase
         $result = $provider->sendText('923009999999', 'Hello Meta');
 
         $this->assertSame('text', $result->payload['type']);
-        $this->assertSame('wamid.mock123', $result->response['messages'][0]['id']);
+        $this->assertStringStartsWith('wamid.mock', $result->response['messages'][0]['id']);
         $this->assertCount(1, $mock->sent);
     }
 

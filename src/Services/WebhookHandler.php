@@ -5,17 +5,20 @@ namespace Vendor\LaravelWhatsAppCloud\Services;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Vendor\LaravelWhatsAppCloud\Contracts\ConversationRecorderInterface;
+use Vendor\LaravelWhatsAppCloud\Contracts\MessageLoggerInterface;
 use Vendor\LaravelWhatsAppCloud\Events\MessageDelivered;
 use Vendor\LaravelWhatsAppCloud\Events\MessageRead;
 use Vendor\LaravelWhatsAppCloud\Events\MessageReceived;
 use Vendor\LaravelWhatsAppCloud\Models\WhatsAppAccount;
 use Vendor\LaravelWhatsAppCloud\Models\WhatsAppMessage;
+use Vendor\LaravelWhatsAppCloud\Support\IncomingMessageParser;
 
 class WebhookHandler
 {
     public function __construct(
         protected WebhookSignatureValidator $signatureValidator,
         protected ConversationRecorderInterface $conversationRecorder,
+        protected MessageLoggerInterface $messageLogger,
     ) {}
 
     public function verify(Request $request): Response|string
@@ -39,11 +42,12 @@ class WebhookHandler
 
     public function handle(Request $request): Response
     {
-        if (! $this->signatureValidator->isValid($request)) {
+        $payload = $request->json()->all();
+        $account = $this->resolveAccountFromMetaPayload($payload);
+
+        if (! $this->signatureValidator->isValid($request, $account)) {
             abort(403, 'Invalid webhook signature.');
         }
-
-        $payload = $request->json()->all();
 
         if ($payload === [] || ! isset($payload['entry']) || ! is_array($payload['entry'])) {
             return response('EVENT_RECEIVED', 200);
@@ -54,13 +58,7 @@ class WebhookHandler
                 continue;
             }
 
-            $changes = $entry['changes'] ?? [];
-
-            if (! is_array($changes)) {
-                continue;
-            }
-
-            foreach ($changes as $change) {
+            foreach ($entry['changes'] ?? [] as $change) {
                 if (! is_array($change)) {
                     continue;
                 }
@@ -77,14 +75,14 @@ class WebhookHandler
                     continue;
                 }
 
-                $account = $this->resolveAccountByPhoneNumberId($phoneNumberId);
+                $resolvedAccount = $this->resolveAccountByPhoneNumberId($phoneNumberId) ?? $account;
 
-                if (! $account) {
+                if (! $resolvedAccount) {
                     continue;
                 }
 
-                $this->handleMessages($account, $value);
-                $this->handleStatuses($account, $value);
+                $this->handleMessages($resolvedAccount, $value);
+                $this->handleStatuses($resolvedAccount, $value);
             }
         }
 
@@ -107,6 +105,19 @@ class WebhookHandler
         foreach ($messages as $message) {
             if (! is_array($message)) {
                 continue;
+            }
+
+            $parsed = IncomingMessageParser::parse($message, is_array($contacts) ? $contacts : []);
+
+            if (config('whatsapp.log_messages', true)) {
+                $this->messageLogger->logIncoming(
+                    $account,
+                    $parsed['phone'],
+                    $parsed['type'],
+                    $parsed['body'],
+                    $parsed['payload'],
+                    $parsed['whatsapp_message_id'],
+                );
             }
 
             if (config('whatsapp.conversations.enabled', true)) {
@@ -141,12 +152,16 @@ class WebhookHandler
             $wamid = $status['id'] ?? null;
             $recipient = $status['recipient_id'] ?? null;
 
-            $this->updateMessageStatus(
+            $updated = $this->updateMessageStatus(
                 $account,
                 is_string($wamid) ? $wamid : null,
                 is_string($recipient) ? $recipient : null,
                 is_string($statusType) ? $statusType : null,
             );
+
+            if (! $updated) {
+                continue;
+            }
 
             match ($statusType) {
                 'delivered' => event(new MessageDelivered($account, $status)),
@@ -161,9 +176,9 @@ class WebhookHandler
         ?string $wamid,
         ?string $recipient,
         ?string $statusType,
-    ): void {
+    ): bool {
         if (! $statusType || ! config('whatsapp.log_messages', true)) {
-            return;
+            return false;
         }
 
         $status = match ($statusType) {
@@ -175,7 +190,7 @@ class WebhookHandler
         };
 
         if (! $status) {
-            return;
+            return false;
         }
 
         $query = WhatsAppMessage::query()->where('account_id', $account->id);
@@ -185,10 +200,70 @@ class WebhookHandler
         } elseif ($recipient) {
             $query->where('to', $recipient)->latest('id');
         } else {
-            return;
+            return false;
         }
 
-        $query->limit(1)->update(['status' => $status]);
+        $message = $query->first();
+
+        if (! $message) {
+            return false;
+        }
+
+        if (! $this->shouldAdvanceStatus($message->status, $status)) {
+            return false;
+        }
+
+        $message->update(['status' => $status]);
+
+        return true;
+    }
+
+    protected function shouldAdvanceStatus(string $current, string $incoming): bool
+    {
+        if ($current === $incoming) {
+            return false;
+        }
+
+        $rank = [
+            WhatsAppMessage::STATUS_PENDING => 0,
+            WhatsAppMessage::STATUS_RECEIVED => 0,
+            WhatsAppMessage::STATUS_SENT => 1,
+            WhatsAppMessage::STATUS_DELIVERED => 2,
+            WhatsAppMessage::STATUS_READ => 3,
+            WhatsAppMessage::STATUS_FAILED => 99,
+        ];
+
+        if ($incoming === WhatsAppMessage::STATUS_FAILED) {
+            return true;
+        }
+
+        return ($rank[$incoming] ?? 0) > ($rank[$current] ?? 0);
+    }
+
+    /**
+     * @param  array<string, mixed>  $payload
+     */
+    protected function resolveAccountFromMetaPayload(array $payload): ?WhatsAppAccount
+    {
+        foreach ($payload['entry'] ?? [] as $entry) {
+            if (! is_array($entry)) {
+                continue;
+            }
+
+            foreach ($entry['changes'] ?? [] as $change) {
+                $phoneNumberId = $change['value']['metadata']['phone_number_id'] ?? null;
+
+                if (is_string($phoneNumberId) && $phoneNumberId !== '') {
+                    $account = $this->resolveAccountByPhoneNumberId($phoneNumberId);
+
+                    if ($account) {
+                        return $account;
+                    }
+                }
+            }
+        }
+
+        return null;
     }
 
     protected function resolveAccountByVerifyToken(?string $token): ?WhatsAppAccount

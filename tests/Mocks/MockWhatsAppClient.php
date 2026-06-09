@@ -3,6 +3,7 @@
 namespace Vendor\LaravelWhatsAppCloud\Tests\Mocks;
 
 use Vendor\LaravelWhatsAppCloud\Contracts\WhatsAppClientInterface;
+use Vendor\LaravelWhatsAppCloud\Exceptions\WhatsAppException;
 
 class MockWhatsAppClient implements WhatsAppClientInterface
 {
@@ -10,6 +11,8 @@ class MockWhatsAppClient implements WhatsAppClientInterface
     public array $sent = [];
 
     public bool $shouldFail = false;
+
+    protected int $messageCounter = 0;
 
     public function send(string $phoneNumberId, string $accessToken, array $payload): array
     {
@@ -20,17 +23,19 @@ class MockWhatsAppClient implements WhatsAppClientInterface
         ];
 
         if ($this->shouldFail) {
-            throw new \Vendor\LaravelWhatsAppCloud\Exceptions\WhatsAppException(
+            throw new WhatsAppException(
                 'Mock API failure',
                 ['error' => ['message' => 'Mock failure']],
                 400,
             );
         }
 
+        $this->messageCounter++;
+
         return [
             'messaging_product' => 'whatsapp',
             'contacts' => [['wa_id' => $payload['to'] ?? '']],
-            'messages' => [['id' => 'wamid.mock123']],
+            'messages' => [['id' => 'wamid.mock'.$this->messageCounter]],
         ];
     }
 }

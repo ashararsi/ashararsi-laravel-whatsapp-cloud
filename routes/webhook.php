@@ -1,6 +1,7 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use Vendor\LaravelWhatsAppCloud\Http\Controllers\TwilioWebhookController;
 use Vendor\LaravelWhatsAppCloud\Http\Controllers\WebhookController;
 
 $prefix = config('whatsapp.webhook.prefix', 'whatsapp');
@@ -11,4 +12,7 @@ Route::middleware($middleware)
     ->group(function () {
         Route::get('/webhook', [WebhookController::class, 'verify']);
         Route::post('/webhook', [WebhookController::class, 'handle']);
+
+        Route::post('/twilio/webhook', [TwilioWebhookController::class, 'inbound']);
+        Route::post('/twilio/status', [TwilioWebhookController::class, 'status']);
     });

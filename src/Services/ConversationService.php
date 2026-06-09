@@ -36,15 +36,23 @@ class ConversationService implements ConversationRecorderInterface
 
         $conversation = $this->findOrCreateConversation($account, $contact);
 
-        $message = WhatsAppConversationMessage::query()->create([
+        $attributes = [
             'conversation_id' => $conversation->id,
             'direction' => WhatsAppConversationMessage::DIRECTION_INCOMING,
-            'whatsapp_message_id' => $parsed['whatsapp_message_id'],
             'phone' => $parsed['phone'],
             'message' => $parsed['body'],
             'type' => $parsed['type'],
             'payload_json' => $parsed['payload'],
-        ]);
+        ];
+
+        if ($parsed['whatsapp_message_id']) {
+            $message = WhatsAppConversationMessage::query()->firstOrCreate(
+                ['whatsapp_message_id' => $parsed['whatsapp_message_id']],
+                $attributes,
+            );
+        } else {
+            $message = WhatsAppConversationMessage::query()->create($attributes);
+        }
 
         $this->touchConversation($conversation);
 

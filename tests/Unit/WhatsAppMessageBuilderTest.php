@@ -69,4 +69,20 @@ class WhatsAppMessageBuilderTest extends TestCase
 
         WhatsAppMessageBuilder::location('923001234567', 120, 0);
     }
+
+    #[Test]
+    public function it_builds_interactive_button_and_list_payloads(): void
+    {
+        $buttons = WhatsAppMessageBuilder::interactiveButtons('923001234567', 'Choose', [
+            ['id' => 'yes', 'title' => 'Yes'],
+        ]);
+        $list = WhatsAppMessageBuilder::interactiveList('923001234567', 'Pick', 'Menu', [
+            ['title' => 'Options', 'rows' => [['id' => '1', 'title' => 'One']]],
+        ]);
+
+        $this->assertSame('interactive', $buttons['type']);
+        $this->assertSame('button', $buttons['interactive']['type']);
+        $this->assertSame('interactive', $list['type']);
+        $this->assertSame('list', $list['interactive']['type']);
+    }
 }

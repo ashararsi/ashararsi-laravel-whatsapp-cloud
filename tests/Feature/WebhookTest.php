@@ -105,7 +105,7 @@ class WebhookTest extends TestCase
     {
         Event::fake([MessageReceived::class, MessageDelivered::class, MessageRead::class]);
 
-        WhatsAppAccount::query()->create([
+        $account = WhatsAppAccount::query()->create([
             'name' => 'webhook',
             'phone_number' => '923001234567',
             'phone_number_id' => '12345',
@@ -113,6 +113,15 @@ class WebhookTest extends TestCase
             'access_token' => 'token-1234567890',
             'is_default' => true,
             'is_active' => true,
+        ]);
+
+        WhatsAppMessage::query()->create([
+            'account_id' => $account->id,
+            'whatsapp_message_id' => 'wamid.abc',
+            'to' => '923009999999',
+            'type' => 'text',
+            'message' => 'Hello',
+            'status' => WhatsAppMessage::STATUS_SENT,
         ]);
 
         $payload = [

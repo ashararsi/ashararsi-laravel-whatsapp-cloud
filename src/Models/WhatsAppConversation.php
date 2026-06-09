@@ -10,10 +10,17 @@ class WhatsAppConversation extends Model
 {
     protected $table = 'whatsapp_conversations';
 
+    public const STATUS_OPEN = 'open';
+
+    public const STATUS_CLOSED = 'closed';
+
     protected $fillable = [
+        'tenant_id',
         'account_id',
         'contact_id',
         'last_message_at',
+        'status',
+        'assigned_to',
     ];
 
     protected function casts(): array

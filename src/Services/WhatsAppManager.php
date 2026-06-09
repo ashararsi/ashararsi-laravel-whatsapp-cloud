@@ -6,6 +6,8 @@ use Illuminate\Support\Facades\Log;
 use Vendor\LaravelWhatsAppCloud\Contracts\AccountResolverInterface;
 use Vendor\LaravelWhatsAppCloud\Contracts\ConversationRecorderInterface;
 use Vendor\LaravelWhatsAppCloud\Contracts\MessageLoggerInterface;
+use Vendor\LaravelWhatsAppCloud\Contracts\SupportsInteractiveMessages;
+use Vendor\LaravelWhatsAppCloud\Contracts\WhatsAppProviderInterface;
 use Vendor\LaravelWhatsAppCloud\Exceptions\WhatsAppException;
 use Vendor\LaravelWhatsAppCloud\Jobs\SendWhatsAppMessageJob;
 use Vendor\LaravelWhatsAppCloud\Models\WhatsAppAccount;
@@ -129,6 +131,49 @@ class WhatsAppManager
         );
     }
 
+    /**
+     * @param  array<int, array<string, string>>  $buttons
+     */
+    public function sendButtons(
+        string $to,
+        string $body,
+        array $buttons,
+        ?string $header = null,
+        ?string $footer = null,
+    ): WhatsAppMessage {
+        return $this->dispatch(
+            'buttons',
+            $to,
+            $body,
+            compact('body', 'buttons', 'header', 'footer'),
+            function (SupportsInteractiveMessages $provider) use ($to, $body, $buttons, $header, $footer) {
+                return $provider->sendButtons($to, $body, $buttons, $header, $footer);
+            },
+        );
+    }
+
+    /**
+     * @param  array<int, array<string, mixed>>  $sections
+     */
+    public function sendList(
+        string $to,
+        string $body,
+        string $buttonText,
+        array $sections,
+        ?string $header = null,
+        ?string $footer = null,
+    ): WhatsAppMessage {
+        return $this->dispatch(
+            'list',
+            $to,
+            $body,
+            compact('body', 'buttonText', 'sections', 'header', 'footer') + ['button_text' => $buttonText],
+            function (SupportsInteractiveMessages $provider) use ($to, $body, $buttonText, $sections, $header, $footer) {
+                return $provider->sendList($to, $body, $buttonText, $sections, $header, $footer);
+            },
+        );
+    }
+
     public function sendLocation(
         string $to,
         float $latitude,
@@ -154,7 +199,7 @@ class WhatsAppManager
 
     /**
      * @param  array<string, mixed>  $options
-     * @param  callable(\Vendor\LaravelWhatsAppCloud\Contracts\WhatsAppProviderInterface): ProviderResult  $sender
+     * @param  callable(WhatsAppProviderInterface): ProviderResult  $sender
      */
     protected function dispatch(
         string $type,
@@ -165,6 +210,10 @@ class WhatsAppManager
     ): WhatsAppMessage {
         $account = $this->accountResolver->resolve($this->accountIdentifier);
         $provider = $this->providerFactory->resolve($account);
+
+        if (in_array($type, ['buttons', 'list'], true) && ! $provider instanceof SupportsInteractiveMessages) {
+            throw new WhatsAppException("Provider [{$account->provider}] does not support interactive messages.");
+        }
 
         if ($this->shouldQueue()) {
             $payload = $provider->buildPayload($type, $to, $options);
@@ -204,7 +253,7 @@ class WhatsAppManager
     }
 
     /**
-     * @param  callable(\Vendor\LaravelWhatsAppCloud\Contracts\WhatsAppProviderInterface): ProviderResult|null  $sender
+     * @param  callable(WhatsAppProviderInterface): ProviderResult|null  $sender
      * @param  array<string, mixed>|null  $payload
      */
     public function sendNow(
@@ -220,8 +269,10 @@ class WhatsAppManager
         try {
             if (is_array($senderOrPayload)) {
                 $result = $provider->sendPayload($to, $type, $senderOrPayload);
-            } else {
+            } elseif ($provider instanceof SupportsInteractiveMessages) {
                 $result = $senderOrPayload($provider);
+            } else {
+                throw new WhatsAppException("Provider [{$account->provider}] does not support this message type.");
             }
 
             $wamid = WhatsAppPayload::extractMessageId($result->response);

@@ -3,6 +3,7 @@
 namespace Vendor\LaravelWhatsAppCloud\Tests;
 
 use Orchestra\Testbench\TestCase as Orchestra;
+use Vendor\LaravelWhatsAppCloud\Facades\WhatsApp;
 use Vendor\LaravelWhatsAppCloud\WhatsAppServiceProvider;
 
 abstract class TestCase extends Orchestra
@@ -17,7 +18,7 @@ abstract class TestCase extends Orchestra
     protected function getPackageAliases($app): array
     {
         return [
-            'WhatsApp' => \Vendor\LaravelWhatsAppCloud\Facades\WhatsApp::class,
+            'WhatsApp' => WhatsApp::class,
         ];
     }
 
@@ -37,6 +38,10 @@ abstract class TestCase extends Orchestra
         $app['config']->set('whatsapp.admin.authorization_enabled', false);
         $app['config']->set('whatsapp.cache.enabled', false);
         $app['config']->set('whatsapp.webhook.require_signature', false);
+        $app['config']->set('whatsapp.twilio.require_signature', false);
+        $app['config']->set('whatsapp.events.process_incoming', false);
+        $app['config']->set('whatsapp.media.enabled', false);
+        $app['config']->set('whatsapp.ai.enabled', false);
     }
 
     protected function defineDatabaseMigrations(): void

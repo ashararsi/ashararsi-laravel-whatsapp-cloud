@@ -7,8 +7,9 @@ on:
     branches: [main, master]
 
 jobs:
-  quality:
+  pint:
     runs-on: ubuntu-latest
+    name: Laravel Pint
 
     steps:
       - uses: actions/checkout@v4
@@ -20,14 +21,47 @@ jobs:
           extensions: dom, curl, libxml, mbstring, zip, pcntl, pdo, sqlite, pdo_sqlite
           coverage: none
 
-      - name: Validate composer.json
-        run: composer validate --strict
+      - name: Install dependencies
+        run: composer install --prefer-dist --no-interaction --no-progress
+
+      - name: Run Pint
+        run: vendor/bin/pint --test
+
+  phpstan:
+    runs-on: ubuntu-latest
+    name: PHPStan
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          extensions: dom, curl, libxml, mbstring, zip, pcntl, pdo, sqlite, pdo_sqlite
+          coverage: none
 
       - name: Install dependencies
         run: composer install --prefer-dist --no-interaction --no-progress
 
-      - name: PHPUnit
-        run: vendor/bin/phpunit
+      - name: Run PHPStan
+        run: vendor/bin/phpstan analyse --memory-limit=512M
+
+  validate:
+    runs-on: ubuntu-latest
+    name: Composer validate
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          coverage: none
+
+      - name: Validate composer.json
+        run: composer validate --strict
 
       - name: Check PSR-4 autoload
         run: composer dump-autoload --optimize --strict-psr

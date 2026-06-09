@@ -5,7 +5,6 @@ namespace Vendor\LaravelWhatsAppCloud\Http\Requests;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Support\Facades\Gate;
 use Vendor\LaravelWhatsAppCloud\Http\Requests\Concerns\ValidatesWhatsAppAccount;
-use Vendor\LaravelWhatsAppCloud\Models\WhatsAppAccount;
 
 class UpdateAccountRequest extends FormRequest
 {

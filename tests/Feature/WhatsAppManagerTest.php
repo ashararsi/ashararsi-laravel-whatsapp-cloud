@@ -2,6 +2,7 @@
 
 namespace Vendor\LaravelWhatsAppCloud\Tests\Feature;
 
+use Illuminate\Support\Facades\Http;
 use PHPUnit\Framework\Attributes\Test;
 use Vendor\LaravelWhatsAppCloud\Contracts\WhatsAppClientInterface;
 use Vendor\LaravelWhatsAppCloud\Facades\WhatsApp;
@@ -46,7 +47,7 @@ class WhatsAppManagerTest extends TestCase
             'to' => '923009999999',
             'type' => 'text',
             'status' => 'sent',
-            'whatsapp_message_id' => 'wamid.mock123',
+            'whatsapp_message_id' => 'wamid.mock1',
         ]);
     }
 
@@ -84,8 +85,8 @@ class WhatsAppManagerTest extends TestCase
     #[Test]
     public function it_sends_via_twilio_provider(): void
     {
-        \Illuminate\Support\Facades\Http::fake([
-            'api.twilio.com/*' => \Illuminate\Support\Facades\Http::response([
+        Http::fake([
+            'api.twilio.com/*' => Http::response([
                 'sid' => 'SMtwilio123',
                 'status' => 'queued',
             ], 201),

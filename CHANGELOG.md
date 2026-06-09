@@ -2,14 +2,58 @@
 
 All notable changes to `ashararsi/laravel-whatsapp-cloud` will be documented in this file.
 
+## [2.0.0-beta.1] - 2026-06-09
+
+### Added
+- WhatsApp CRM platform: contact tags, notes (admin UI), conversation inbox with reply
+- Interactive Meta buttons and lists API (`sendButtons`, `sendList`)
+- Media download service for incoming Meta attachments
+- OpenAI integration: AI auto-reply engine and Whisper audio transcription
+- Auto-reply rules engine with keyword, first-message, and AI modes
+- AI agent workflows with configurable steps
+- Broadcast campaigns module with admin UI, queue option, and `whatsapp:campaigns:run`
+- Scheduled messages with `whatsapp:scheduled:send` command
+- Template sync command `whatsapp:templates:sync`
+- Analytics dashboard with 7-day message volume table
+- Conversation full-text search across contacts and messages
+- Typed event system (campaign, AI, media, workflow, reply events)
+- Incoming message pipeline listener (media, transcription, auto-reply, workflows)
+
+### Fixed
+- Replaced invalid variadic event constructors that caused PHP 8.3/8.4 fatal errors
+- Admin reply, campaign dispatch, media download, and AI pipelines no longer crash on event dispatch
+- Notes and tags admin UI on contact detail page
+- Graceful failure handling for OpenAI transcription and AI reply failures
+
+### Note
+- `whatsapp_tenants` schema columns exist for future use; multi-tenant isolation is **not** implemented
+- Filament integration is **not** included; use the built-in Bootstrap admin panel or publish views
+
+[2.0.0-beta.1]: https://github.com/ashararsi/ashararsi-laravel-whatsapp-cloud/releases/tag/v2.0.0-beta.1
+
 ## [1.2.0] - 2026-06-09
 
 ### Added
-- Conversation platform: contacts, conversations, conversation messages
-- `ConversationService` with automatic webhook + outgoing recording
-- Admin dashboard, contacts, and conversations UI with search
-- Incoming/outgoing message timeline on conversation detail page
-- Tests for conversation service, webhook storage, admin UI
+- Per-account Meta `app_secret` for webhook signature verification (fallback to global secret)
+- Webhook idempotency: duplicate Meta message and status deliveries are ignored
+- Incoming message logging to `whatsapp_messages` with `direction` (`incoming` / `outgoing`)
+- Migration: `direction`, `from`, unique `whatsapp_message_id` on `whatsapp_messages`
+- Admin conversation reply form with optional queue dispatch and error handling
+- Twilio inbound webhook: `POST /whatsapp/twilio/webhook` (text, media, location)
+- Twilio status callbacks: `POST /whatsapp/twilio/status` (`queued`, `sent`, `delivered`, `failed`, `undelivered`)
+- `TwilioSignatureValidator` for `X-Twilio-Signature` verification
+- `php artisan whatsapp:doctor` health check command (PASS / WARNING / ERROR report)
+- PHPStan (level 5), Laravel Pint, and expanded GitHub Actions quality workflow
+- 15+ new tests covering security, idempotency, Twilio, doctor, and inbox replies
+
+### Changed
+- `WebhookHandler` resolves account before signature validation
+- `MessageLogger::logIncoming()` stores inbound messages with idempotent `firstOrCreate`
+- README: Meta/Twilio setup, webhooks, inbox replies, doctor command, security guidance
+
+### Security
+- Meta webhooks can require per-account HMAC signatures
+- Twilio webhooks validate request signatures by default
 
 ## [1.1.0] - 2026-06-09
 

@@ -23,6 +23,8 @@ class MessageLogger implements MessageLoggerInterface
 
         $attributes = [
             'account_id' => $account->id,
+            'direction' => WhatsAppMessage::DIRECTION_OUTGOING,
+            'from' => null,
             'to' => WhatsAppMessageBuilder::normalizePhone($to),
             'type' => $type,
             'message' => $message,
@@ -34,6 +36,41 @@ class MessageLogger implements MessageLoggerInterface
 
         if (! config('whatsapp.log_messages', true)) {
             return new WhatsAppMessage($attributes);
+        }
+
+        return WhatsAppMessage::query()->create($attributes);
+    }
+
+    public function logIncoming(
+        WhatsAppAccount $account,
+        string $from,
+        string $type,
+        ?string $message,
+        array $payload,
+        ?string $whatsappMessageId = null,
+    ): WhatsAppMessage {
+        $attributes = [
+            'account_id' => $account->id,
+            'direction' => WhatsAppMessage::DIRECTION_INCOMING,
+            'from' => WhatsAppMessageBuilder::normalizePhone($from),
+            'to' => WhatsAppMessageBuilder::normalizePhone((string) $account->phone_number),
+            'type' => $type,
+            'message' => $message,
+            'status' => WhatsAppMessage::STATUS_RECEIVED,
+            'meta_json' => $this->sanitizePayload($payload),
+            'response_json' => null,
+            'whatsapp_message_id' => $whatsappMessageId,
+        ];
+
+        if (! config('whatsapp.log_messages', true)) {
+            return new WhatsAppMessage($attributes);
+        }
+
+        if ($whatsappMessageId) {
+            return WhatsAppMessage::query()->firstOrCreate(
+                ['whatsapp_message_id' => $whatsappMessageId],
+                $attributes,
+            );
         }
 
         return WhatsAppMessage::query()->create($attributes);

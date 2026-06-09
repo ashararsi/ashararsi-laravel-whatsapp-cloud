@@ -21,6 +21,8 @@ class WhatsAppAccount extends Model
         'provider',
         'phone_number',
         'phone_number_id',
+        'waba_id',
+        'tenant_id',
         'access_token',
         'app_secret',
         'webhook_verify_token',

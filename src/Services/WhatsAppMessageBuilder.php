@@ -166,6 +166,96 @@ class WhatsAppMessageBuilder
         ];
     }
 
+    /**
+     * @param  array<int, array<string, string>>  $buttons
+     */
+    public static function interactiveButtons(
+        string $to,
+        string $body,
+        array $buttons,
+        ?string $header = null,
+        ?string $footer = null,
+    ): array {
+        self::assertNonEmpty($body, 'Interactive message body cannot be empty.');
+
+        if ($buttons === []) {
+            throw new WhatsAppException('At least one button is required.');
+        }
+
+        $actionButtons = array_map(
+            fn (array $button) => [
+                'type' => 'reply',
+                'reply' => [
+                    'id' => (string) ($button['id'] ?? $button['title']),
+                    'title' => (string) ($button['title'] ?? 'Button'),
+                ],
+            ],
+            array_slice($buttons, 0, 3),
+        );
+
+        $interactive = [
+            'type' => 'button',
+            'body' => ['text' => $body],
+            'action' => ['buttons' => $actionButtons],
+        ];
+
+        if ($header !== null) {
+            $interactive['header'] = ['type' => 'text', 'text' => $header];
+        }
+
+        if ($footer !== null) {
+            $interactive['footer'] = ['text' => $footer];
+        }
+
+        return [
+            'messaging_product' => 'whatsapp',
+            'recipient_type' => 'individual',
+            'to' => self::normalizePhone($to),
+            'type' => 'interactive',
+            'interactive' => $interactive,
+        ];
+    }
+
+    /**
+     * @param  array<int, array<string, mixed>>  $sections
+     */
+    public static function interactiveList(
+        string $to,
+        string $body,
+        string $buttonText,
+        array $sections,
+        ?string $header = null,
+        ?string $footer = null,
+    ): array {
+        self::assertNonEmpty($body, 'List message body cannot be empty.');
+        self::assertNonEmpty($buttonText, 'List button text cannot be empty.');
+
+        $interactive = [
+            'type' => 'list',
+            'body' => ['text' => $body],
+            'action' => [
+                'button' => $buttonText,
+                'sections' => $sections,
+            ],
+        ];
+
+        if ($header !== null) {
+            $interactive['header'] = ['type' => 'text', 'text' => $header];
+        }
+
+        if ($footer !== null) {
+            $interactive['footer'] = ['text' => $footer];
+        }
+
+        return [
+            'messaging_product' => 'whatsapp',
+            'recipient_type' => 'individual',
+            'to' => self::normalizePhone($to),
+            'type' => 'interactive',
+            'interactive' => $interactive,
+        ];
+    }
+
     public static function normalizePhone(string $phone): string
     {
         $normalized = preg_replace('/[^0-9]/', '', $phone) ?? '';

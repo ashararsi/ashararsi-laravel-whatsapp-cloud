@@ -2,6 +2,7 @@
 
 namespace Vendor\LaravelWhatsAppCloud\Providers;
 
+use Vendor\LaravelWhatsAppCloud\Contracts\SupportsInteractiveMessages;
 use Vendor\LaravelWhatsAppCloud\Contracts\WhatsAppClientInterface;
 use Vendor\LaravelWhatsAppCloud\Contracts\WhatsAppProviderInterface;
 use Vendor\LaravelWhatsAppCloud\Exceptions\WhatsAppException;
@@ -9,7 +10,7 @@ use Vendor\LaravelWhatsAppCloud\Models\WhatsAppAccount;
 use Vendor\LaravelWhatsAppCloud\Services\WhatsAppMessageBuilder;
 use Vendor\LaravelWhatsAppCloud\Support\ProviderResult;
 
-class MetaProvider implements WhatsAppProviderInterface
+class MetaProvider implements SupportsInteractiveMessages, WhatsAppProviderInterface
 {
     public function __construct(
         protected WhatsAppAccount $account,
@@ -92,6 +93,35 @@ class MetaProvider implements WhatsAppProviderInterface
         );
     }
 
+    public function sendButtons(
+        string $to,
+        string $body,
+        array $buttons,
+        ?string $header = null,
+        ?string $footer = null,
+    ): ProviderResult {
+        return $this->sendPayload(
+            $to,
+            'interactive',
+            WhatsAppMessageBuilder::interactiveButtons($to, $body, $buttons, $header, $footer),
+        );
+    }
+
+    public function sendList(
+        string $to,
+        string $body,
+        string $buttonText,
+        array $sections,
+        ?string $header = null,
+        ?string $footer = null,
+    ): ProviderResult {
+        return $this->sendPayload(
+            $to,
+            'interactive',
+            WhatsAppMessageBuilder::interactiveList($to, $body, $buttonText, $sections, $header, $footer),
+        );
+    }
+
     public function buildPayload(string $type, string $to, array $options = []): array
     {
         return match ($type) {
@@ -121,6 +151,21 @@ class MetaProvider implements WhatsAppProviderInterface
                 (float) ($options['longitude'] ?? 0),
                 $options['name'] ?? null,
                 $options['address'] ?? null,
+            ),
+            'buttons' => WhatsAppMessageBuilder::interactiveButtons(
+                $to,
+                (string) ($options['body'] ?? ''),
+                $options['buttons'] ?? [],
+                $options['header'] ?? null,
+                $options['footer'] ?? null,
+            ),
+            'list' => WhatsAppMessageBuilder::interactiveList(
+                $to,
+                (string) ($options['body'] ?? ''),
+                (string) ($options['button_text'] ?? 'Options'),
+                $options['sections'] ?? [],
+                $options['header'] ?? null,
+                $options['footer'] ?? null,
             ),
             default => throw new WhatsAppException("Unsupported Meta payload type [{$type}]."),
         };

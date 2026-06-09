@@ -4,9 +4,7 @@ namespace Vendor\LaravelWhatsAppCloud\Tests\Feature;
 
 use PHPUnit\Framework\Attributes\Test;
 use Vendor\LaravelWhatsAppCloud\Models\WhatsAppAccount;
-use Vendor\LaravelWhatsAppCloud\Models\WhatsAppContact;
 use Vendor\LaravelWhatsAppCloud\Models\WhatsAppConversation;
-use Vendor\LaravelWhatsAppCloud\Models\WhatsAppConversationMessage;
 use Vendor\LaravelWhatsAppCloud\Services\ConversationService;
 use Vendor\LaravelWhatsAppCloud\Tests\TestCase;
 

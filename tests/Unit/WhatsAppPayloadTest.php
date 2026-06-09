@@ -21,7 +21,7 @@ class WhatsAppPayloadTest extends TestCase
     #[Test]
     public function it_extracts_twilio_sid_from_response(): void
     {
-        $id = \Vendor\LaravelWhatsAppCloud\Support\WhatsAppPayload::extractMessageId([
+        $id = WhatsAppPayload::extractMessageId([
             'sid' => 'SMtwilio123',
             'status' => 'queued',
         ]);

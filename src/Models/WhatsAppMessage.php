@@ -19,9 +19,17 @@ class WhatsAppMessage extends Model
 
     public const STATUS_READ = 'read';
 
+    public const STATUS_RECEIVED = 'received';
+
+    public const DIRECTION_INCOMING = 'incoming';
+
+    public const DIRECTION_OUTGOING = 'outgoing';
+
     protected $fillable = [
         'account_id',
+        'direction',
         'whatsapp_message_id',
+        'from',
         'to',
         'type',
         'message',

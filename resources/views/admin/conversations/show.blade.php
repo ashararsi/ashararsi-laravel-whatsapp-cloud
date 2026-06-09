@@ -38,4 +38,25 @@
             <div class="card-footer">{{ $messages->links() }}</div>
         @endif
     </div>
+
+    <div class="card shadow-sm mt-4">
+        <div class="card-header">Reply</div>
+        <div class="card-body">
+            <form action="{{ route('whatsapp.admin.conversations.reply', $conversation) }}" method="POST">
+                @csrf
+                <div class="mb-3">
+                    <textarea name="message" class="form-control" rows="3" placeholder="Type your reply..." required>{{ old('message') }}</textarea>
+                </div>
+                @if (config('whatsapp.queue_enabled', true))
+                    <div class="form-check mb-3">
+                        <input class="form-check-input" type="checkbox" name="queue" value="1" id="queue_reply" {{ old('queue') ? 'checked' : '' }}>
+                        <label class="form-check-label" for="queue_reply">Send via queue</label>
+                    </div>
+                @endif
+                <button type="submit" class="btn btn-success">
+                    <i class="bi bi-send"></i> Send Reply
+                </button>
+            </form>
+        </div>
+    </div>
 @endsection

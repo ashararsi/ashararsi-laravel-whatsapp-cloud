@@ -95,6 +95,10 @@
                    href="{{ route('whatsapp.admin.conversations.index') }}">
                     <i class="bi bi-chat-dots"></i> Conversations
                 </a>
+                <a class="nav-link {{ request()->routeIs('whatsapp.admin.campaigns.*') ? 'active' : '' }}"
+                   href="{{ route('whatsapp.admin.campaigns.index') }}">
+                    <i class="bi bi-megaphone"></i> Campaigns
+                </a>
                 <a class="nav-link {{ request()->routeIs('whatsapp.admin.accounts.*') ? 'active' : '' }}"
                    href="{{ route('whatsapp.admin.accounts.index') }}">
                     <i class="bi bi-gear"></i> Accounts
@@ -156,6 +160,10 @@
                 <a class="nav-link text-white {{ request()->routeIs('whatsapp.admin.conversations.*') ? 'active' : '' }}"
                    href="{{ route('whatsapp.admin.conversations.index') }}">
                     <i class="bi bi-chat-dots me-2"></i> Conversations
+                </a>
+                <a class="nav-link text-white {{ request()->routeIs('whatsapp.admin.campaigns.*') ? 'active' : '' }}"
+                   href="{{ route('whatsapp.admin.campaigns.index') }}">
+                    <i class="bi bi-megaphone me-2"></i> Campaigns
                 </a>
                 <a class="nav-link text-white {{ request()->routeIs('whatsapp.admin.accounts.*') ? 'active' : '' }}"
                    href="{{ route('whatsapp.admin.accounts.index') }}">

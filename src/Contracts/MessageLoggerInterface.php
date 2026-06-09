@@ -21,4 +21,16 @@ interface MessageLoggerInterface
         string $status,
         ?string $whatsappMessageId = null,
     ): WhatsAppMessage;
+
+    /**
+     * @param  array<string, mixed>  $payload
+     */
+    public function logIncoming(
+        WhatsAppAccount $account,
+        string $from,
+        string $type,
+        ?string $message,
+        array $payload,
+        ?string $whatsappMessageId = null,
+    ): WhatsAppMessage;
 }

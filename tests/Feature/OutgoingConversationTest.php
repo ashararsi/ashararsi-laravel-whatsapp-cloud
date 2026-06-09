@@ -36,7 +36,7 @@ class OutgoingConversationTest extends TestCase
         $this->assertDatabaseHas('whatsapp_conversation_messages', [
             'direction' => 'outgoing',
             'message' => 'Outbound hello',
-            'whatsapp_message_id' => 'wamid.mock123',
+            'whatsapp_message_id' => 'wamid.mock1',
         ]);
     }
 }

@@ -4,11 +4,11 @@ namespace Vendor\LaravelWhatsAppCloud\Tests\Feature;
 
 use Illuminate\Support\Facades\Queue;
 use PHPUnit\Framework\Attributes\Test;
+use Vendor\LaravelWhatsAppCloud\Contracts\WhatsAppClientInterface;
 use Vendor\LaravelWhatsAppCloud\Facades\WhatsApp;
 use Vendor\LaravelWhatsAppCloud\Jobs\SendWhatsAppMessageJob;
 use Vendor\LaravelWhatsAppCloud\Models\WhatsAppAccount;
 use Vendor\LaravelWhatsAppCloud\Tests\Mocks\MockWhatsAppClient;
-use Vendor\LaravelWhatsAppCloud\Contracts\WhatsAppClientInterface;
 use Vendor\LaravelWhatsAppCloud\Tests\TestCase;
 
 class QueueTest extends TestCase

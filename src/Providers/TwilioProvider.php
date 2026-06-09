@@ -3,13 +3,14 @@
 namespace Vendor\LaravelWhatsAppCloud\Providers;
 
 use Illuminate\Support\Facades\Http;
+use Vendor\LaravelWhatsAppCloud\Contracts\SupportsInteractiveMessages;
 use Vendor\LaravelWhatsAppCloud\Contracts\WhatsAppProviderInterface;
 use Vendor\LaravelWhatsAppCloud\Exceptions\WhatsAppException;
 use Vendor\LaravelWhatsAppCloud\Models\WhatsAppAccount;
 use Vendor\LaravelWhatsAppCloud\Services\WhatsAppMessageBuilder;
 use Vendor\LaravelWhatsAppCloud\Support\ProviderResult;
 
-class TwilioProvider implements WhatsAppProviderInterface
+class TwilioProvider implements SupportsInteractiveMessages, WhatsAppProviderInterface
 {
     public function __construct(
         protected WhatsAppAccount $account,
@@ -118,6 +119,11 @@ class TwilioProvider implements WhatsAppProviderInterface
                     $options['longitude'] ?? 0,
                 ),
             ],
+            'buttons', 'list' => [
+                'From' => $this->fromAddress(),
+                'To' => $this->toAddress($to),
+                'Body' => (string) ($options['body'] ?? ''),
+            ],
             default => throw new WhatsAppException("Unsupported Twilio payload type [{$type}]."),
         };
 
@@ -150,6 +156,21 @@ class TwilioProvider implements WhatsAppProviderInterface
                 $payload['location']['name'] ?? null,
                 $payload['location']['address'] ?? null,
             ),
+            'buttons' => $this->sendButtons(
+                $to,
+                (string) ($payload['body'] ?? ''),
+                $payload['buttons'] ?? [],
+                $payload['header'] ?? null,
+                $payload['footer'] ?? null,
+            ),
+            'list' => $this->sendList(
+                $to,
+                (string) ($payload['body'] ?? ''),
+                (string) ($payload['button_text'] ?? 'Options'),
+                $payload['sections'] ?? [],
+                $payload['header'] ?? null,
+                $payload['footer'] ?? null,
+            ),
             default => throw new WhatsAppException("Unsupported Twilio payload type [{$type}]."),
         };
     }
@@ -172,6 +193,37 @@ class TwilioProvider implements WhatsAppProviderInterface
         }
 
         return $this->dispatch($payload);
+    }
+
+    public function sendButtons(
+        string $to,
+        string $body,
+        array $buttons,
+        ?string $header = null,
+        ?string $footer = null,
+    ): ProviderResult {
+        $lines = array_map(fn (array $b) => ($b['title'] ?? 'Option'), $buttons);
+
+        return $this->sendText($to, trim(($header ? $header."\n\n" : '').$body."\n\n".implode("\n", $lines)));
+    }
+
+    public function sendList(
+        string $to,
+        string $body,
+        string $buttonText,
+        array $sections,
+        ?string $header = null,
+        ?string $footer = null,
+    ): ProviderResult {
+        $options = [];
+
+        foreach ($sections as $section) {
+            foreach ($section['rows'] ?? [] as $row) {
+                $options[] = ($row['title'] ?? '').': '.($row['description'] ?? '');
+            }
+        }
+
+        return $this->sendText($to, trim(($header ? $header."\n\n" : '').$body."\n\n".implode("\n", $options)));
     }
 
     /**

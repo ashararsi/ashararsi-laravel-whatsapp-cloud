@@ -3,12 +3,13 @@
 namespace Vendor\LaravelWhatsAppCloud\Services;
 
 use Illuminate\Http\Request;
+use Vendor\LaravelWhatsAppCloud\Models\WhatsAppAccount;
 
 class WebhookSignatureValidator
 {
-    public function isValid(Request $request): bool
+    public function isValid(Request $request, ?WhatsAppAccount $account = null): bool
     {
-        $secret = config('whatsapp.webhook.app_secret');
+        $secret = $this->resolveSecret($account);
 
         if (empty($secret)) {
             return ! config('whatsapp.webhook.require_signature', false);
@@ -23,5 +24,16 @@ class WebhookSignatureValidator
         $expected = 'sha256='.hash_hmac('sha256', $request->getContent(), $secret);
 
         return hash_equals($expected, $signature);
+    }
+
+    public function resolveSecret(?WhatsAppAccount $account): ?string
+    {
+        if ($account?->app_secret) {
+            return (string) $account->app_secret;
+        }
+
+        $global = config('whatsapp.webhook.app_secret');
+
+        return is_string($global) && $global !== '' ? $global : null;
     }
 }
