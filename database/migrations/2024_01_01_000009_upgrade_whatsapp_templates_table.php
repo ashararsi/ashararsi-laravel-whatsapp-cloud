@@ -8,6 +8,11 @@ return new class extends Migration
 {
     public function up(): void
     {
+        // MySQL may use the composite unique index to back the account_id FK.
+        Schema::table('whatsapp_templates', function (Blueprint $table) {
+            $table->index('account_id', 'whatsapp_templates_account_id_index');
+        });
+
         Schema::table('whatsapp_templates', function (Blueprint $table) {
             $table->dropUnique(['account_id', 'name', 'language']);
         });
@@ -40,6 +45,7 @@ return new class extends Migration
 
         Schema::table('whatsapp_templates', function (Blueprint $table) {
             $table->unique(['account_id', 'name', 'language']);
+            $table->dropIndex('whatsapp_templates_account_id_index');
         });
     }
 };

@@ -4,9 +4,11 @@ namespace Vendor\LaravelWhatsAppCloud\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Vendor\LaravelWhatsAppCloud\Models\Concerns\BelongsToTenant;
 
 class WhatsAppAutoReply extends Model
 {
+    use BelongsToTenant;
     public const TRIGGER_KEYWORD = 'keyword';
 
     public const TRIGGER_FIRST_MESSAGE = 'first_message';

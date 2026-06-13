@@ -19,6 +19,10 @@ class WhatsAppAccountObserver
         if ($account->is_default) {
             $replacement = WhatsAppAccount::query()
                 ->where('id', '!=', $account->id)
+                ->when(
+                    $account->tenant_id !== null,
+                    fn ($query) => $query->where('tenant_id', $account->tenant_id),
+                )
                 ->active()
                 ->oldest('id')
                 ->first();

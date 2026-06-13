@@ -5,9 +5,11 @@ namespace Vendor\LaravelWhatsAppCloud\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Vendor\LaravelWhatsAppCloud\Models\Concerns\BelongsToTenant;
 
 class WhatsAppConversation extends Model
 {
+    use BelongsToTenant;
     protected $table = 'whatsapp_conversations';
 
     public const STATUS_OPEN = 'open';

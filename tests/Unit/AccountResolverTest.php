@@ -23,7 +23,7 @@ class AccountResolverTest extends TestCase
             'is_active' => true,
         ]);
 
-        $resolver = new AccountResolver;
+        $resolver = app(AccountResolver::class);
         $account = $resolver->resolve();
 
         $this->assertSame('primary', $account->name);
@@ -42,7 +42,7 @@ class AccountResolverTest extends TestCase
             'is_active' => true,
         ]);
 
-        $resolver = new AccountResolver;
+        $resolver = app(AccountResolver::class);
         $account = $resolver->resolve('marketing');
 
         $this->assertSame('marketing', $account->name);
@@ -53,6 +53,6 @@ class AccountResolverTest extends TestCase
     {
         $this->expectException(AccountNotFoundException::class);
 
-        (new AccountResolver)->resolve('missing');
+        app(AccountResolver::class)->resolve('missing');
     }
 }

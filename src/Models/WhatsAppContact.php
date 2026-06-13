@@ -7,9 +7,11 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
+use Vendor\LaravelWhatsAppCloud\Models\Concerns\BelongsToTenant;
 
 class WhatsAppContact extends Model
 {
+    use BelongsToTenant;
     protected $table = 'whatsapp_contacts';
 
     protected $fillable = [

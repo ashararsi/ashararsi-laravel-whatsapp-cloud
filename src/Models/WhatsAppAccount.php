@@ -4,7 +4,9 @@ namespace Vendor\LaravelWhatsAppCloud\Models;
 
 use Illuminate\Database\Eloquent\Attributes\ObservedBy;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Vendor\LaravelWhatsAppCloud\Models\Concerns\BelongsToTenant;
 use Vendor\LaravelWhatsAppCloud\Observers\WhatsAppAccountObserver;
 
 /**
@@ -26,6 +28,8 @@ use Vendor\LaravelWhatsAppCloud\Observers\WhatsAppAccountObserver;
 #[ObservedBy([WhatsAppAccountObserver::class])]
 class WhatsAppAccount extends Model
 {
+    use BelongsToTenant;
+
     public const PROVIDER_META = 'meta';
 
     public const PROVIDER_TWILIO = 'twilio';
@@ -67,6 +71,11 @@ class WhatsAppAccount extends Model
             'is_default' => 'boolean',
             'is_active' => 'boolean',
         ];
+    }
+
+    public function tenant(): BelongsTo
+    {
+        return $this->belongsTo(WhatsAppTenant::class, 'tenant_id');
     }
 
     public function messages(): HasMany
@@ -114,7 +123,13 @@ class WhatsAppAccount extends Model
 
     public static function setDefault(self $account): void
     {
-        static::query()->where('id', '!=', $account->id)->update(['is_default' => false]);
+        $query = static::query()->where('id', '!=', $account->id);
+
+        if ($account->tenant_id !== null) {
+            $query->where('tenant_id', $account->tenant_id);
+        }
+
+        $query->update(['is_default' => false]);
         $account->update(['is_default' => true]);
     }
 }

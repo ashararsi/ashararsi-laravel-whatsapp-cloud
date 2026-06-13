@@ -34,16 +34,18 @@ class AccountController extends Controller
     public function store(StoreAccountRequest $request): RedirectResponse
     {
         $data = $request->validated();
-
-        if ($data['is_default'] ?? false) {
-            WhatsAppAccount::query()->update(['is_default' => false]);
-        }
+        $isDefault = (bool) ($data['is_default'] ?? false);
+        unset($data['is_default']);
 
         if (! WhatsAppAccount::query()->exists()) {
-            $data['is_default'] = true;
+            $isDefault = true;
         }
 
-        WhatsAppAccount::query()->create($data);
+        $account = WhatsAppAccount::query()->create($data);
+
+        if ($isDefault) {
+            WhatsAppAccount::setDefault($account);
+        }
 
         return redirect()
             ->route('whatsapp.admin.accounts.index')
@@ -84,7 +86,8 @@ class AccountController extends Controller
         $data = $request->validated();
 
         if ($data['is_default'] ?? false) {
-            WhatsAppAccount::query()->where('id', '!=', $account->id)->update(['is_default' => false]);
+            WhatsAppAccount::setDefault($account);
+            unset($data['is_default']);
         }
 
         $account->update($data);

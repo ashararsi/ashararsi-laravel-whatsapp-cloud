@@ -104,6 +104,7 @@ class ConversationService implements ConversationRecorderInterface
                 'phone' => $normalizedPhone,
             ],
             [
+                'tenant_id' => $account->tenant_id,
                 'name' => $name,
                 'metadata_json' => $metadata,
             ],
@@ -136,6 +137,7 @@ class ConversationService implements ConversationRecorderInterface
                 'contact_id' => $contact->id,
             ],
             [
+                'tenant_id' => $account->tenant_id ?? $contact->tenant_id,
                 'last_message_at' => now(),
             ],
         );

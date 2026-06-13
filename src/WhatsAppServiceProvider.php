@@ -41,6 +41,7 @@ use Vendor\LaravelWhatsAppCloud\Services\ProviderFactory;
 use Vendor\LaravelWhatsAppCloud\Services\ScheduledMessageService;
 use Vendor\LaravelWhatsAppCloud\Services\SystemHealthService;
 use Vendor\LaravelWhatsAppCloud\Services\TemplateSyncService;
+use Vendor\LaravelWhatsAppCloud\Services\TenantContext;
 use Vendor\LaravelWhatsAppCloud\Services\TwilioSignatureValidator;
 use Vendor\LaravelWhatsAppCloud\Services\TwilioWebhookHandler;
 use Vendor\LaravelWhatsAppCloud\Services\WebhookHandler;
@@ -63,6 +64,7 @@ class WhatsAppServiceProvider extends ServiceProvider
         $this->app->singleton(BusinessProfileSyncService::class);
         $this->app->singleton(PhoneNumberSyncService::class);
         $this->app->singleton(SystemHealthService::class);
+        $this->app->singleton(TenantContext::class);
         $this->app->singleton(WhatsAppSettingsService::class);
         $this->app->singleton(AccountResolverInterface::class, AccountResolver::class);
         $this->app->singleton(MessageLoggerInterface::class, MessageLogger::class);

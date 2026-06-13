@@ -330,7 +330,57 @@ Set `WHATSAPP_OPENAI_API_KEY` in `.env` (secret — not stored in DB). Enable fe
 - **Media download** — Meta incoming attachments saved to disk (`WHATSAPP_MEDIA_DISK` in `.env`)
 - **Audio transcription** — Whisper via OpenAI when enabled
 
-> **Scope note:** Multi-tenant data isolation and Filament admin resources are not included in v1.0.0. The package ships a Bootstrap admin panel; publish views to integrate with your own layout.
+## Multi-Tenant Mode (Optional)
+
+By default the package runs in **single-tenant** mode — no tenant scoping is applied and `tenant_id` columns remain optional.
+
+Enable tenant isolation when your app serves multiple tenants:
+
+```env
+WHATSAPP_TENANT_ENABLED=true
+WHATSAPP_TENANT_RESOLVER=App\\WhatsApp\\TenantResolver
+```
+
+Implement `TenantResolverInterface` in your app:
+
+```php
+use Vendor\LaravelWhatsAppCloud\Contracts\TenantResolverInterface;
+
+class TenantResolver implements TenantResolverInterface
+{
+    public function resolve(): ?int
+    {
+        return auth()->user()?->tenant_id;
+    }
+}
+```
+
+Register the resolver in a service provider:
+
+```php
+$this->app->bind(
+    \Vendor\LaravelWhatsAppCloud\Contracts\TenantResolverInterface::class,
+    TenantResolver::class,
+);
+
+config(['whatsapp.tenant.resolver' => TenantResolver::class]);
+```
+
+When tenant mode is enabled:
+
+- Admin routes automatically run `ResolveWhatsAppTenant` middleware (disable with `WHATSAPP_TENANT_ADMIN_MIDDLEWARE=false`)
+- Queries are scoped to the active tenant once `TenantContext` is set
+- Webhooks and CLI commands still work globally (no tenant scope until you set one)
+- `tenant_id` is auto-filled on create from the active tenant or related account
+
+Run code for a specific tenant without middleware:
+
+```php
+app(\Vendor\LaravelWhatsAppCloud\Services\TenantContext::class)
+    ->runForTenant($tenantId, fn () => WhatsApp::sendText('923001234567', 'Hello'));
+```
+
+> **Scope note:** Filament admin resources are not included. The package ships a Bootstrap admin panel; publish views to integrate with your own layout.
 
 ## Admin Panel
 

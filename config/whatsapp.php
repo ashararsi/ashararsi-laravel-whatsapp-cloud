@@ -117,6 +117,8 @@ return [
     'tenant' => [
         'enabled' => env('WHATSAPP_TENANT_ENABLED', false),
         'column' => env('WHATSAPP_TENANT_COLUMN', 'tenant_id'),
+        'resolver' => env('WHATSAPP_TENANT_RESOLVER'),
+        'admin_middleware' => env('WHATSAPP_TENANT_ADMIN_MIDDLEWARE', true),
     ],
 
     'filament' => [

@@ -6,9 +6,13 @@ use Illuminate\Support\Facades\Cache;
 use Vendor\LaravelWhatsAppCloud\Contracts\AccountResolverInterface;
 use Vendor\LaravelWhatsAppCloud\Exceptions\AccountNotFoundException;
 use Vendor\LaravelWhatsAppCloud\Models\WhatsAppAccount;
+use Vendor\LaravelWhatsAppCloud\Services\TenantContext;
 
 class AccountResolver implements AccountResolverInterface
 {
+    public function __construct(
+        protected TenantContext $tenantContext,
+    ) {}
     public function resolve(int|string|null $identifier = null): WhatsAppAccount
     {
         if ($identifier !== null) {
@@ -21,8 +25,8 @@ class AccountResolver implements AccountResolverInterface
             return $this->resolveByIdentifier($configDefault);
         }
 
-        $accountId = $this->rememberId('whatsapp.accounts.default', function () {
-            return WhatsAppAccount::query()
+        $accountId = $this->rememberId('whatsapp.accounts.default'.$this->tenantCacheSuffix(), function () {
+            return $this->scopedAccountQuery()
                 ->active()
                 ->default()
                 ->value('id');
@@ -32,8 +36,8 @@ class AccountResolver implements AccountResolverInterface
             return $this->findAccountOrFail((int) $accountId, 'default');
         }
 
-        $accountId = $this->rememberId('whatsapp.accounts.first_active', function () {
-            return WhatsAppAccount::query()->active()->oldest('id')->value('id');
+        $accountId = $this->rememberId('whatsapp.accounts.first_active'.$this->tenantCacheSuffix(), function () {
+            return $this->scopedAccountQuery()->active()->oldest('id')->value('id');
         });
 
         if ($accountId) {
@@ -62,19 +66,19 @@ class AccountResolver implements AccountResolverInterface
     protected function resolveByIdentifier(int|string $identifier): WhatsAppAccount
     {
         if (is_numeric($identifier)) {
-            $cacheKey = "whatsapp.accounts.id.{$identifier}";
+            $cacheKey = "whatsapp.accounts.id.{$identifier}{$this->tenantCacheSuffix()}";
 
             $accountId = $this->rememberId($cacheKey, function () use ($identifier) {
-                return WhatsAppAccount::query()
+                return $this->scopedAccountQuery()
                     ->active()
                     ->where('id', (int) $identifier)
                     ->value('id');
             });
         } else {
-            $cacheKey = 'whatsapp.accounts.name.'.md5((string) $identifier);
+            $cacheKey = 'whatsapp.accounts.name.'.md5((string) $identifier).$this->tenantCacheSuffix();
 
             $accountId = $this->rememberId($cacheKey, function () use ($identifier) {
-                return WhatsAppAccount::query()
+                return $this->scopedAccountQuery()
                     ->active()
                     ->where('name', (string) $identifier)
                     ->value('id');
@@ -90,13 +94,27 @@ class AccountResolver implements AccountResolverInterface
 
     protected function findAccountOrFail(int $accountId, string $identifier): WhatsAppAccount
     {
-        $account = WhatsAppAccount::query()->active()->find($accountId);
+        $account = $this->scopedAccountQuery()->active()->find($accountId);
 
         if (! $account) {
             throw new AccountNotFoundException($identifier);
         }
 
         return $account;
+    }
+
+    protected function scopedAccountQuery()
+    {
+        return WhatsAppAccount::query();
+    }
+
+    protected function tenantCacheSuffix(): string
+    {
+        if (! $this->tenantContext->shouldScope()) {
+            return '';
+        }
+
+        return '.tenant.'.$this->tenantContext->id();
     }
 
     protected function rememberId(string $key, callable $callback): mixed

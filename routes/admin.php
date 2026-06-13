@@ -18,6 +18,12 @@ use Vendor\LaravelWhatsAppCloud\Models\WhatsAppTemplate;
 $prefix = config('whatsapp.admin.prefix', 'admin/whatsapp');
 $middleware = config('whatsapp.admin.middleware', ['web']);
 
+if (config('whatsapp.tenant.enabled', false) && config('whatsapp.tenant.admin_middleware', true)) {
+    $middleware = array_merge($middleware, [
+        \Vendor\LaravelWhatsAppCloud\Http\Middleware\ResolveWhatsAppTenant::class,
+    ]);
+}
+
 Route::middleware($middleware)
     ->prefix($prefix)
     ->name('whatsapp.admin.')

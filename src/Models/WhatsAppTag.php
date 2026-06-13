@@ -5,9 +5,11 @@ namespace Vendor\LaravelWhatsAppCloud\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Vendor\LaravelWhatsAppCloud\Models\Concerns\BelongsToTenant;
 
 class WhatsAppTag extends Model
 {
+    use BelongsToTenant;
     protected $table = 'whatsapp_tags';
 
     protected $fillable = [
